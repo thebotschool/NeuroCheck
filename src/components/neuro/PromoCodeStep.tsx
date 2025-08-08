@@ -2,10 +2,9 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, CheckCircle2, XCircle } from 'lucide-react';
+import { Loader2, CreditCard, Ticket } from 'lucide-react';
 
 interface PromoCodeStepProps {
   onSuccess: (userId: string) => void;
@@ -14,7 +13,8 @@ interface PromoCodeStepProps {
 export const PromoCodeStep = ({ onSuccess }: PromoCodeStepProps) => {
   const [promoCode, setPromoCode] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showPayment, setShowPayment] = useState(false);
+  const [promoOpen, setPromoOpen] = useState(false);
+  const [paymentOpen, setPaymentOpen] = useState(false);
 
   const checkPromoCode = async () => {
     if (!promoCode.trim()) {
@@ -36,16 +36,14 @@ export const PromoCodeStep = ({ onSuccess }: PromoCodeStepProps) => {
         .single();
 
       if (error || !data) {
-        setShowPayment(true);
         toast({
           title: 'Промокод недействителен',
-          description: 'Промокод не найден или уже использован. Переходим к оплате.',
+          description: 'Промокод не найден или уже использован.',
           variant: 'destructive',
         });
         return;
       }
 
-      // Mark promo code as used
       await supabase
         .from('promo_codes')
         .update({ used: true, used_at: new Date().toISOString() })
@@ -53,26 +51,21 @@ export const PromoCodeStep = ({ onSuccess }: PromoCodeStepProps) => {
 
       toast({
         title: 'Промокод принят!',
-        description: 'Промокод действителен. Переходим к регистрации.',
+        description: 'Переходим к регистрации.',
       });
 
-      // Generate unique user ID
       const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       onSuccess(userId);
     } catch (error) {
       console.error('Error checking promo code:', error);
-      setShowPayment(true);
+      toast({ title: 'Ошибка', description: 'Не удалось проверить промокод', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
   };
 
-  const handlePayment = () => {
-    // For demo purposes, simulate successful payment
-    toast({
-      title: 'Оплата принята',
-      description: 'Платеж обработан успешно. Переходим к регистрации.',
-    });
+  const continueWithPayment = () => {
+    toast({ title: 'Продолжение', description: 'Переходим к регистрации.' });
     const userId = `paid_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     onSuccess(userId);
   };
@@ -86,58 +79,61 @@ export const PromoCodeStep = ({ onSuccess }: PromoCodeStepProps) => {
             Система нейропсихологического тестирования
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {!showPayment ? (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="promo">Промокод</Label>
-                <Input
-                  id="promo"
-                  placeholder="Введите промокод"
-                  value={promoCode}
-                  onChange={(e) => setPromoCode(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && !loading && checkPromoCode()}
-                />
+        <CardContent className="space-y-6">
+          <div className="grid gap-3">
+            <Button
+              className="w-full"
+              onClick={() => {
+                setPaymentOpen(true);
+                setPromoOpen(false);
+              }}
+            >
+              <CreditCard className="mr-2 h-4 w-4" /> Оплатить картой
+            </Button>
+            <Button
+              className="w-full"
+              variant="outline"
+              onClick={() => {
+                setPromoOpen(true);
+                setPaymentOpen(false);
+              }}
+            >
+              <Ticket className="mr-2 h-4 w-4" /> У меня есть промокод
+            </Button>
+          </div>
+
+          {paymentOpen && (
+            <div className="space-y-4 border rounded-lg p-4">
+              <div className="text-center">
+                <p className="font-semibold">Стоимость тестирования: 500 ₽</p>
+                <p className="text-sm text-muted-foreground">Форма оплаты появится здесь</p>
               </div>
-              <Button 
-                onClick={checkPromoCode} 
-                disabled={loading}
-                className="w-full"
-              >
+              <Button className="w-full" onClick={continueWithPayment}>
+                Продолжить
+              </Button>
+            </div>
+          )}
+
+          {promoOpen && (
+            <div className="space-y-3 border rounded-lg p-4">
+              <Input
+                id="promo"
+                placeholder="Введите промокод"
+                value={promoCode}
+                onChange={(e) => setPromoCode(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !loading) checkPromoCode();
+                }}
+              />
+              <Button className="w-full" onClick={checkPromoCode} disabled={loading}>
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Проверяем...
                   </>
                 ) : (
-                  <>
-                    <CheckCircle2 className="mr-2 h-4 w-4" />
-                    Проверить промокод
-                  </>
+                  'Продолжить'
                 )}
-              </Button>
-            </>
-          ) : (
-            <div className="space-y-4">
-              <div className="text-center p-4 bg-destructive/10 rounded-lg">
-                <XCircle className="mx-auto h-12 w-12 text-destructive mb-2" />
-                <h3 className="font-semibold">Промокод недействителен</h3>
-                <p className="text-sm text-muted-foreground">
-                  Для прохождения тестирования необходимо произвести оплату
-                </p>
-              </div>
-              <div className="text-center p-4 bg-card rounded-lg border">
-                <p className="font-semibold">Стоимость тестирования: 500 ₽</p>
-              </div>
-              <Button onClick={handlePayment} className="w-full" variant="default">
-                Оплатить через ЮКассу
-              </Button>
-              <Button 
-                onClick={() => setShowPayment(false)} 
-                variant="outline" 
-                className="w-full"
-              >
-                Попробовать другой промокод
               </Button>
             </div>
           )}

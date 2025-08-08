@@ -10,8 +10,15 @@ interface TimeCheckStepProps {
 export const TimeCheckStep = ({ onSuccess }: TimeCheckStepProps) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isTimeValid, setIsTimeValid] = useState(false);
+  const requireWindow = import.meta.env.VITE_REQUIRE_TIME_WINDOW !== 'true';
+  const showDevControls = import.meta.env.VITE_SHOW_DEV_CONTROLS === 'true';
 
   useEffect(() => {
+    if (!requireWindow) {
+      // Auto-skip if window is not required
+      onSuccess();
+      return;
+    }
     const checkTime = () => {
       const now = new Date();
       setCurrentTime(now);
@@ -30,7 +37,7 @@ export const TimeCheckStep = ({ onSuccess }: TimeCheckStepProps) => {
     const interval = setInterval(checkTime, 1000);
     
     return () => clearInterval(interval);
-  }, []);
+  }, [requireWindow, onSuccess]);
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('ru-RU', {
@@ -85,6 +92,11 @@ export const TimeCheckStep = ({ onSuccess }: TimeCheckStepProps) => {
               <Button onClick={onSuccess} className="w-full">
                 Начать тестирование
               </Button>
+              {showDevControls && (
+                <Button variant="outline" className="w-full" onClick={onSuccess}>
+                  Пропустить проверку времени (dev)
+                </Button>
+              )}
             </div>
           ) : (
             <div className="space-y-4">
@@ -97,10 +109,17 @@ export const TimeCheckStep = ({ onSuccess }: TimeCheckStepProps) => {
                   Тест доступен только <strong>с 9:00 до 10:00</strong> по будням (понедельник - пятница)
                 </p>
               </div>
-              <div className="text-center">
-                <p className="text-sm text-muted-foreground">
-                  Попробуйте позже в разрешённое время
-                </p>
+              <div className="space-y-2">
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground">
+                    Попробуйте позже в разрешённое время
+                  </p>
+                </div>
+                {(!requireWindow || showDevControls) && (
+                  <Button variant="outline" className="w-full" onClick={onSuccess}>
+                    Продолжить сейчас (для тестирования)
+                  </Button>
+                )}
               </div>
             </div>
           )}

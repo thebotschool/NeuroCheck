@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { UserData } from '@/types/test';
@@ -17,7 +17,7 @@ interface UserDataStepProps {
 
 export const UserDataStep = ({ userId, onSuccess }: UserDataStepProps) => {
   const [childName, setChildName] = useState('');
-  const [age, setAge] = useState('');
+  const [age, setAge] = useState('7');
   const [email, setEmail] = useState('');
   const [consentAgreed, setConsentAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -32,10 +32,10 @@ export const UserDataStep = ({ userId, onSuccess }: UserDataStepProps) => {
       return;
     }
 
-    if (parseInt(age) < 7 || parseInt(age) > 99) {
+    if (parseInt(age) < 7) {
       toast({
         title: 'Ошибка',
-        description: 'Возраст должен быть от 7 до 99 лет',
+        description: 'Возраст должен быть от 7 лет',
         variant: 'destructive',
       });
       return;
@@ -107,19 +107,17 @@ export const UserDataStep = ({ userId, onSuccess }: UserDataStepProps) => {
 
           <div className="space-y-2">
             <Label htmlFor="age">Возраст *</Label>
-            <Select value={age} onValueChange={setAge}>
-              <SelectTrigger>
-                <SelectValue placeholder="Выберите возраст" />
-              </SelectTrigger>
-              <SelectContent>
-                {Array.from({ length: 17 }, (_, i) => i + 7).map((ageValue) => (
-                  <SelectItem key={ageValue} value={ageValue.toString()}>
-                    {ageValue} лет
-                  </SelectItem>
-                ))}
-                <SelectItem value="24">24+ лет</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">7</span>
+              <span className="font-medium">{age === '23' ? '23+ лет' : `${age} лет`}</span>
+            </div>
+            <Slider
+              value={[parseInt(age)]}
+              onValueChange={(v) => setAge(String(v[0]))}
+              min={7}
+              max={23}
+              step={1}
+            />
           </div>
 
           <div className="space-y-2">

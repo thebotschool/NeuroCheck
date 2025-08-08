@@ -19,6 +19,7 @@ const NeuroCheck = () => {
   const [cptResults, setCptResults] = useState<CPTResult | null>(null);
   const [gonogoResults, setGonogoResults] = useState<GoNoGoResult | null>(null);
   const [memoryResults, setMemoryResults] = useState<MemoryResult | null>(null);
+  const [restContext, setRestContext] = useState<'after-cpt' | 'after-gonogo' | null>(null);
   
   const { createSession, saveCPTResults, saveGoNoGoResults, saveMemoryResults, completeSession } = useTestSession();
 
@@ -30,7 +31,8 @@ const NeuroCheck = () => {
 
   const handleUserDataSuccess = (newUserData: UserData) => {
     setUserData(newUserData);
-    setCurrentStep('time-check');
+    // Временно пропускаем проверку времени: идём сразу на CPT
+    setCurrentStep('cpt-test');
   };
 
   const handleTimeCheckSuccess = () => {
@@ -40,21 +42,38 @@ const NeuroCheck = () => {
   const handleCPTComplete = async (results: CPTResult) => {
     setCptResults(results);
     await saveCPTResults(results);
-    setCurrentStep('hand-switch');
+    setRestContext('after-cpt');
+    setCurrentStep('visual-rest');
   };
 
-  const handleHandSwitchContinue = () => {
-    setCurrentStep('gonogo-test');
+  const handleCPTSkipToRest = async (results: CPTResult) => {
+    // Save partial/early results and jump to rest screen
+    setCptResults(results);
+    await saveCPTResults(results);
+    setRestContext('after-cpt');
+    setCurrentStep('visual-rest');
   };
+
+  // HandSwitchStep is not used; Go/No-Go starts after the first rest automatically
 
   const handleGoNoGoComplete = async (results: GoNoGoResult) => {
     setGonogoResults(results);
     await saveGoNoGoResults(results);
+    setRestContext('after-gonogo');
     setCurrentStep('visual-rest');
   };
 
   const handleVisualRestContinue = () => {
-    setCurrentStep('memory-test');
+    if (restContext === 'after-cpt') {
+      setRestContext(null);
+      setCurrentStep('gonogo-test');
+    } else if (restContext === 'after-gonogo') {
+      setRestContext(null);
+      setCurrentStep('memory-test');
+    } else {
+      // Fallback: go to memory
+      setCurrentStep('memory-test');
+    }
   };
 
   const handleMemoryComplete = async (results: MemoryResult) => {
@@ -79,23 +98,27 @@ const NeuroCheck = () => {
     case 'user-data':
       return <UserDataStep userId={userId} onSuccess={handleUserDataSuccess} />;
     
-    case 'time-check':
-      return <TimeCheckStep onSuccess={handleTimeCheckSuccess} />;
+    // time-check шаг временно отключён: проверка будет на лендинге
+    // case 'time-check':
+    //   return <TimeCheckStep onSuccess={handleTimeCheckSuccess} />;
     
     case 'cpt-test':
-      return <CPTTest onComplete={handleCPTComplete} />;
+      return <CPTTest onComplete={handleCPTComplete} onSkip={handleCPTSkipToRest} />;
     
-    case 'hand-switch':
-      return <HandSwitchStep onContinue={handleHandSwitchContinue} />;
+    // case 'hand-switch':
+    //   return <HandSwitchStep onContinue={handleHandSwitchContinue} />;
     
     case 'gonogo-test':
       return <GoNoGoTest onComplete={handleGoNoGoComplete} />;
     
     case 'visual-rest':
-      return <VisualRestStep onContinue={handleVisualRestContinue} />;
+      // Both rest periods are 2 minutes as per spec
+      // Temporary bypass enabled to skip visual rest when needed
+      return <VisualRestStep onContinue={handleVisualRestContinue} durationMs={120000} devBypass />;
     
     case 'memory-test':
-      return <MemoryTest onComplete={handleMemoryComplete} />;
+      // Enable dev bypass to allow skipping the distractor during testing
+      return <MemoryTest onComplete={handleMemoryComplete} age={userData?.age ?? 18} devBypass />;
     
     case 'results':
       if (!userData || !cptResults || !gonogoResults || !memoryResults) {

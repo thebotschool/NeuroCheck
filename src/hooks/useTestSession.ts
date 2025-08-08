@@ -51,16 +51,18 @@ export const useTestSession = () => {
 
     try {
       setLoading(true);
+      // Prepare update payload by sending only defined fields, mapping to DB columns
+      const payload: Record<string, unknown> = {};
+      if (typeof updates.currentStep !== 'undefined') payload.current_step = updates.currentStep;
+      if (typeof updates.cptResults !== 'undefined') payload.cpt_results = updates.cptResults as unknown;
+      if (typeof updates.gonogoResults !== 'undefined') payload.gonogo_results = updates.gonogoResults as unknown;
+      if (typeof updates.memoryResults !== 'undefined') payload.memory_results = updates.memoryResults as unknown;
+      if (typeof updates.completedAt !== 'undefined') payload.completed_at = updates.completedAt ? updates.completedAt.toISOString() : null;
+      if (typeof updates.isCompleted !== 'undefined') payload.is_completed = updates.isCompleted;
+
       const { error } = await supabase
         .from('test_sessions')
-        .update({
-          current_step: updates.currentStep,
-          cpt_results: updates.cptResults as any,
-          gonogo_results: updates.gonogoResults as any,
-          memory_results: updates.memoryResults as any,
-          completed_at: updates.completedAt?.toISOString(),
-          is_completed: updates.isCompleted,
-        })
+        .update(payload)
         .eq('id', session.id);
 
       if (error) throw error;

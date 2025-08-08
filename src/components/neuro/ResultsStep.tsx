@@ -4,6 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { CPTResult, GoNoGoResult, MemoryResult, UserData } from '@/types/test';
 import { Download, Mail, MessageCircle } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { buildFeedbackHtml, buildSummaryKey, scoreCPT, scoreGoNoGo, scoreMemory } from '@/lib/scoring';
 
 interface ResultsStepProps {
   userData: UserData;
@@ -22,6 +24,7 @@ export const ResultsStep = ({
 }: ResultsStepProps) => {
   const [resultSummary, setResultSummary] = useState<string>('');
   const [feedback, setFeedback] = useState<string>('');
+  const [resendLoading, setResendLoading] = useState(false);
 
   const calculateScore = (value: number, thresholds: number[]): number => {
     if (value >= thresholds[0]) return 5;
@@ -32,55 +35,23 @@ export const ResultsStep = ({
   };
 
   useEffect(() => {
-    // Calculate scores for each test
-    const attentionScore = calculateScore(cptResults.accuracy, [95, 90, 85, 80]);
-    const selfControlScore = calculateScore(gonogoResults.accuracy, [95, 90, 85, 80]);
-    const memoryScore = calculateScore(memoryResults.accuracy, [100, 80, 60, 40]);
-
-    const summary = `X${attentionScore}-Y${selfControlScore}-Z${memoryScore}`;
+    // New simple scoring core (placeholder thresholds)
+    const x = scoreCPT(cptResults, userData.age);
+    const y = scoreGoNoGo(gonogoResults, userData.age);
+    const z = scoreMemory(memoryResults, userData.age);
+    const summary = buildSummaryKey(x, y, z);
     setResultSummary(summary);
+    setFeedback(buildFeedbackHtml(summary, cptResults, gonogoResults, memoryResults));
+  }, [cptResults, gonogoResults, memoryResults, userData.age]);
 
-    // Generate feedback based on results
-    const generateFeedback = () => {
-      let feedbackText = `<div class="space-y-4">
-        <h3 class="text-lg font-semibold">Результаты нейропсихологического тестирования</h3>
-        
-        <div class="grid gap-4">
-          <div class="p-4 bg-blue-50 rounded-lg">
-            <h4 class="font-semibold text-blue-800">Внимание (CPT): ${attentionScore}/5</h4>
-            <p class="text-sm text-blue-600">Точность: ${cptResults.accuracy.toFixed(1)}%</p>
-            <p class="text-sm text-blue-600">Среднее время реакции: ${cptResults.averageReactionTime.toFixed(0)}мс</p>
-          </div>
-          
-          <div class="p-4 bg-green-50 rounded-lg">
-            <h4 class="font-semibold text-green-800">Самоконтроль (Go/No-Go): ${selfControlScore}/5</h4>
-            <p class="text-sm text-green-600">Точность: ${gonogoResults.accuracy.toFixed(1)}%</p>
-            <p class="text-sm text-green-600">Среднее время реакции: ${gonogoResults.averageReactionTime.toFixed(0)}мс</p>
-          </div>
-          
-          <div class="p-4 bg-purple-50 rounded-lg">
-            <h4 class="font-semibold text-purple-800">Память: ${memoryScore}/5</h4>
-            <p class="text-sm text-purple-600">Точность: ${memoryResults.accuracy.toFixed(1)}%</p>
-            <p class="text-sm text-purple-600">Время выполнения: ${memoryResults.timeSpent.toFixed(1)}с</p>
-          </div>
-        </div>
-
-        <div class="p-4 bg-gray-50 rounded-lg">
-          <h4 class="font-semibold">Общие рекомендации:</h4>
-          <ul class="list-disc list-inside text-sm mt-2 space-y-1">
-            ${attentionScore < 3 ? '<li>Рекомендуется работа над концентрацией внимания</li>' : ''}
-            ${selfControlScore < 3 ? '<li>Полезны упражнения на развитие самоконтроля</li>' : ''}
-            ${memoryScore < 3 ? '<li>Необходимы тренировки рабочей памяти</li>' : ''}
-            ${attentionScore >= 4 && selfControlScore >= 4 && memoryScore >= 4 ? '<li>Отличные результаты! Продолжайте в том же духе</li>' : ''}
-          </ul>
-        </div>
-      </div>`;
-
-      return feedbackText;
-    };
-
-    setFeedback(generateFeedback());
-  }, [cptResults, gonogoResults, memoryResults]);
+  const handleResend = async () => {
+    try {
+      setResendLoading(true);
+      await supabase.from('messages_queue').insert({ user_id: userData.userId, email_sent: false, telegram_sent: false });
+    } finally {
+      setResendLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 to-accent/5 p-4">
@@ -115,7 +86,7 @@ export const ResultsStep = ({
 
         {/* Actions */}
         <div className="grid md:grid-cols-3 gap-4">
-          <Card>
+           <Card>
             <CardContent className="p-4">
               <Button onClick={onDownloadPDF} className="w-full" variant="outline">
                 <Download className="mr-2 h-4 w-4" />
@@ -124,7 +95,7 @@ export const ResultsStep = ({
             </CardContent>
           </Card>
           
-          <Card>
+           <Card>
             <CardContent className="p-4">
               <div className="space-y-2">
                 <div className="flex items-center text-sm text-muted-foreground">
@@ -134,6 +105,9 @@ export const ResultsStep = ({
                 <p className="text-xs text-muted-foreground">
                   Результаты отправлены на {userData.email}
                 </p>
+                 <Button onClick={handleResend} className="w-full mt-2" disabled={resendLoading}>
+                   Отправить ещё раз на e-mail
+                 </Button>
               </div>
             </CardContent>
           </Card>

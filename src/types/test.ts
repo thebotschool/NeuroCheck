@@ -8,19 +8,40 @@ export interface CPTResult {
   reactionTimes: number[];
   accuracy: number;
   averageReactionTime: number;
+  // Added in Stage 0: standard deviation of reaction times (hits only)
+  // Optional for backward compatibility; will be required by computation later
+  sdReactionTime?: number;
 }
 
-export interface GoNoGoResult {
-  totalStimuli: number;
-  goStimuli: number;
-  noGoStimuli: number;
+// Updated structure to support per-hand metrics while keeping legacy fields optional
+export interface GoNoGoHandMetrics {
   correctGo: number;
   missedGo: number;
   falseAlarms: number;
-  correctNoGo: number;
   reactionTimes: number[];
   averageReactionTime: number;
+  // Optional during migration; will compute later
+  sdReactionTime?: number;
+}
+
+export interface GoNoGoResult {
+  // Aggregates
+  totalStimuli: number;
+  goStimuli: number;
+  noGoStimuli: number;
   accuracy: number;
+
+  // New per-hand metrics
+  rightHand?: GoNoGoHandMetrics;
+  leftHand?: GoNoGoHandMetrics;
+
+  // Legacy flat fields (optional for backward compatibility)
+  correctGo?: number;
+  missedGo?: number;
+  falseAlarms?: number;
+  correctNoGo?: number;
+  reactionTimes?: number[];
+  averageReactionTime?: number;
 }
 
 export interface MemoryResult {
@@ -29,6 +50,12 @@ export interface MemoryResult {
   incorrectCards: number;
   timeSpent: number;
   accuracy: number;
+  // Added metrics for ordering analysis (optional for migration)
+  correctPositions?: number;
+  orderErrors?: number;
+  substitutionErrors?: number;
+  startPosition?: number;
+  reconstructionTime?: number;
 }
 
 export interface TestSession {
