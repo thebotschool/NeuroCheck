@@ -14,7 +14,212 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      messages_queue: {
+        Row: {
+          created_at: string
+          email_sent: boolean | null
+          error_message: string | null
+          id: number
+          telegram_sent: boolean | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email_sent?: boolean | null
+          error_message?: string | null
+          id?: number
+          telegram_sent?: boolean | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email_sent?: boolean | null
+          error_message?: string | null
+          id?: number
+          telegram_sent?: boolean | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      payments: {
+        Row: {
+          amount: number | null
+          payment_id: string
+          status: string | null
+          timestamp: string | null
+          user_id: string
+        }
+        Insert: {
+          amount?: number | null
+          payment_id: string
+          status?: string | null
+          timestamp?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number | null
+          payment_id?: string
+          status?: string | null
+          timestamp?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      promo_codes: {
+        Row: {
+          code: string
+          created_at: string
+          expires_at: string | null
+          used: boolean
+          used_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          expires_at?: string | null
+          used: boolean
+          used_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          expires_at?: string | null
+          used?: boolean
+          used_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      test_results: {
+        Row: {
+          age: number | null
+          cpt_result: Json | null
+          created_at: string
+          email: string | null
+          feedback_html: string | null
+          gonogo_result: Json | null
+          hand_used: string | null
+          id: string
+          memory_result: Json | null
+          result_summary: string | null
+          sent_to_telegram: boolean | null
+          summary_key: string | null
+          test_session_id: string | null
+          user_data_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          age?: number | null
+          cpt_result?: Json | null
+          created_at?: string
+          email?: string | null
+          feedback_html?: string | null
+          gonogo_result?: Json | null
+          hand_used?: string | null
+          id?: string
+          memory_result?: Json | null
+          result_summary?: string | null
+          sent_to_telegram?: boolean | null
+          summary_key?: string | null
+          test_session_id?: string | null
+          user_data_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          age?: number | null
+          cpt_result?: Json | null
+          created_at?: string
+          email?: string | null
+          feedback_html?: string | null
+          gonogo_result?: Json | null
+          hand_used?: string | null
+          id?: string
+          memory_result?: Json | null
+          result_summary?: string | null
+          sent_to_telegram?: boolean | null
+          summary_key?: string | null
+          test_session_id?: string | null
+          user_data_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "test_results_user_data_id_fkey"
+            columns: ["user_data_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      test_sessions: {
+        Row: {
+          completed_at: string | null
+          cpt_results: Json | null
+          current_step: number | null
+          gonogo_results: Json | null
+          id: string
+          is_completed: boolean | null
+          memory_results: Json | null
+          started_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          cpt_results?: Json | null
+          current_step?: number | null
+          gonogo_results?: Json | null
+          id?: string
+          is_completed?: boolean | null
+          memory_results?: Json | null
+          started_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          cpt_results?: Json | null
+          current_step?: number | null
+          gonogo_results?: Json | null
+          id?: string
+          is_completed?: boolean | null
+          memory_results?: Json | null
+          started_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      users: {
+        Row: {
+          age: number | null
+          child_name: string | null
+          consent_agreed: boolean
+          created_at: string
+          email: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          age?: number | null
+          child_name?: string | null
+          consent_agreed?: boolean
+          created_at?: string
+          email?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          age?: number | null
+          child_name?: string | null
+          consent_agreed?: boolean
+          created_at?: string
+          email?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
