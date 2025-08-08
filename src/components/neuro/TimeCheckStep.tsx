@@ -1,0 +1,111 @@
+import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Clock, CheckCircle2 } from 'lucide-react';
+
+interface TimeCheckStepProps {
+  onSuccess: () => void;
+}
+
+export const TimeCheckStep = ({ onSuccess }: TimeCheckStepProps) => {
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [isTimeValid, setIsTimeValid] = useState(false);
+
+  useEffect(() => {
+    const checkTime = () => {
+      const now = new Date();
+      setCurrentTime(now);
+      
+      const hour = now.getHours();
+      const day = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
+      
+      // Check if it's weekday (Monday-Friday) and between 9:00-10:00
+      const isWeekday = day >= 1 && day <= 5;
+      const isValidHour = hour >= 9 && hour < 10;
+      
+      setIsTimeValid(isWeekday && isValidHour);
+    };
+
+    checkTime();
+    const interval = setInterval(checkTime, 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString('ru-RU', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
+  };
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('ru-RU', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-accent/5 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <CardTitle className="flex items-center justify-center gap-2">
+            <Clock className="h-6 w-6" />
+            Проверка времени
+          </CardTitle>
+          <CardDescription>
+            Тестирование доступно только в определённое время
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="text-center space-y-2">
+            <div className="text-2xl font-mono font-bold">
+              {formatTime(currentTime)}
+            </div>
+            <div className="text-sm text-muted-foreground">
+              {formatDate(currentTime)}
+            </div>
+          </div>
+
+          {isTimeValid ? (
+            <div className="space-y-4">
+              <div className="text-center p-4 bg-green-50 dark:bg-green-950 rounded-lg border border-green-200 dark:border-green-800">
+                <CheckCircle2 className="mx-auto h-8 w-8 text-green-600 mb-2" />
+                <p className="text-green-800 dark:text-green-200 font-semibold">
+                  Время для тестирования доступно!
+                </p>
+                <p className="text-sm text-green-600 dark:text-green-400">
+                  Можно начинать прохождение тестов
+                </p>
+              </div>
+              <Button onClick={onSuccess} className="w-full">
+                Начать тестирование
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="text-center p-4 bg-destructive/10 rounded-lg border border-destructive/20">
+                <Clock className="mx-auto h-8 w-8 text-destructive mb-2" />
+                <p className="text-destructive font-semibold">
+                  Тестирование недоступно
+                </p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Тест доступен только <strong>с 9:00 до 10:00</strong> по будням (понедельник - пятница)
+                </p>
+              </div>
+              <div className="text-center">
+                <p className="text-sm text-muted-foreground">
+                  Попробуйте позже в разрешённое время
+                </p>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
