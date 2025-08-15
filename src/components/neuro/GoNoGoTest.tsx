@@ -9,13 +9,14 @@ import { HandSwitchStep } from '@/components/neuro/HandSwitchStep';
 
 interface GoNoGoTestProps {
   onComplete: (results: GoNoGoResult) => void;
+  devMode?: boolean;
 }
 
 const BLOCK_DURATION_MS = 60000; // 1 minute per test block
 const STIMULUS_DURATION = 800; // ~800ms per stimulus
 const GO_RATIO = 0.8; // 80% Go
 
-export const GoNoGoTest = ({ onComplete }: GoNoGoTestProps) => {
+export const GoNoGoTest = ({ onComplete, devMode = false }: GoNoGoTestProps) => {
   type Phase = 'instructions' | 'practiceRight' | 'testRight' | 'handSwitch' | 'practiceLeft' | 'testLeft' | 'complete';
   const [phase, setPhase] = useState<Phase>('instructions');
   const [currentStimulus, setCurrentStimulus] = useState<'green' | 'red' | ''>('');
@@ -375,15 +376,17 @@ export const GoNoGoTest = ({ onComplete }: GoNoGoTestProps) => {
           <p className="text-center text-sm text-muted-foreground mt-2">
             {isPracticePhase(phase) ? 'Пробные стимулы' : 'Идёт блок'} · {phase === 'testRight' || phase === 'practiceRight' ? 'ПРАВАЯ рука' : 'ЛЕВАЯ рука'}
           </p>
-          <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-            <div className="flex justify-between"><span>Ошибки ложного отклика (Commissions)</span><span>{activeFalseAlarms}</span></div>
-            <div className="flex justify-between"><span>Ошибки пропуска (Omissions)</span><span>{activeMisses}</span></div>
-            <div className="flex justify-between"><span>Среднее время реакции (Mean RT), мс</span><span>{activeMeanRt}</span></div>
-            <div className="flex justify-between"><span>Вариативность реакции (SD RT), мс</span><span>{activeSdRt}</span></div>
-            {(phase === 'testLeft' || phase === 'practiceLeft') && (
-              <div className="col-span-2 flex justify-between"><span>Разница среднего времени реакции между руками, мс</span><span>{meanDiffBetweenHands ?? 0}</span></div>
-            )}
-          </div>
+          {devMode && (
+            <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+              <div className="flex justify-between"><span>Ошибки ложного отклика (Commissions)</span><span>{activeFalseAlarms}</span></div>
+              <div className="flex justify-between"><span>Ошибки пропуска (Omissions)</span><span>{activeMisses}</span></div>
+              <div className="flex justify-between"><span>Среднее время реакции (Mean RT), мс</span><span>{activeMeanRt}</span></div>
+              <div className="flex justify-between"><span>Вариативность реакции (SD RT), мс</span><span>{activeSdRt}</span></div>
+              {(phase === 'testLeft' || phase === 'practiceLeft') && (
+                <div className="col-span-2 flex justify-between"><span>Разница среднего времени реакции между руками, мс</span><span>{meanDiffBetweenHands ?? 0}</span></div>
+              )}
+            </div>
+          )}
         </div>
         
         <div className="text-center">
@@ -406,9 +409,11 @@ export const GoNoGoTest = ({ onComplete }: GoNoGoTestProps) => {
           <p className="mt-4 text-sm text-muted-foreground">
             Зелёный - нажать пробел | Красный - не нажимать
           </p>
-          <div className="mt-6">
-            <Button variant="outline" onClick={handleSkip}>Пропустить</Button>
-          </div>
+          {devMode && (
+            <div className="mt-6">
+              <Button variant="outline" onClick={handleSkip}>Пропустить</Button>
+            </div>
+          )}
         </div>
       </div>
     );

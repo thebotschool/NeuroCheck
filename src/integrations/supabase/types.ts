@@ -99,6 +99,7 @@ export type Database = {
           created_at: string
           email: string | null
           feedback_html: string | null
+          feedback_md: string | null
           gonogo_result: Json | null
           hand_used: string | null
           id: string
@@ -116,6 +117,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           feedback_html?: string | null
+          feedback_md?: string | null
           gonogo_result?: Json | null
           hand_used?: string | null
           id?: string
@@ -133,6 +135,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           feedback_html?: string | null
+          feedback_md?: string | null
           gonogo_result?: Json | null
           hand_used?: string | null
           id?: string

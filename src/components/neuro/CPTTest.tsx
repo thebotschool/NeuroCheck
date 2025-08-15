@@ -9,13 +9,14 @@ import { toast } from '@/hooks/use-toast';
 interface CPTTestProps {
   onComplete: (results: CPTResult) => void;
   onSkip?: (results: CPTResult) => void;
+  devMode?: boolean;
 }
 
 const TOTAL_STIMULI = 120; // 2 minutes at 1s per stimulus
 const TARGET_COUNT = 18; // ~15% targets (similar ratio to 6/40)
 const STIMULUS_DURATION = 1000; // 1 second
 
-export const CPTTest = ({ onComplete, onSkip }: CPTTestProps) => {
+export const CPTTest = ({ onComplete, onSkip, devMode = false }: CPTTestProps) => {
   const [phase, setPhase] = useState<'instructions' | 'test' | 'complete'>('instructions');
   const [currentStimulus, setCurrentStimulus] = useState<string>('');
   const [stimulusIndex, setStimulusIndex] = useState(0);
@@ -285,6 +286,9 @@ export const CPTTest = ({ onComplete, onSkip }: CPTTestProps) => {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-accent/5 p-4">
         <Card className="w-full max-w-2xl">
           <CardHeader>
+            <div className="h-3 rounded-full bg-gray-200 overflow-hidden mb-4" aria-hidden="true">
+              <div className="h-3 rounded-full bg-black" style={{ width: '20%', transition: 'width 600ms cubic-bezier(.2,.9,.2,1)' }} />
+            </div>
             <CardTitle>Тест на внимание (CPT)</CardTitle>
             <CardDescription>
               Проверка устойчивости внимания и реакции
@@ -320,12 +324,14 @@ export const CPTTest = ({ onComplete, onSkip }: CPTTestProps) => {
           <p className="text-center text-sm text-muted-foreground mt-2">
             {stimulusIndex} / {TOTAL_STIMULI}
           </p>
-          <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-            <div className="flex justify-between"><span>Ошибки пропуска (Omissions)</span><span>{liveMisses}</span></div>
-            <div className="flex justify-between"><span>Ошибки ложного отклика (Commissions)</span><span>{liveFalseAlarms}</span></div>
-            <div className="flex justify-between"><span>Среднее время реакции (Mean RT), мс</span><span>{liveMeanRt}</span></div>
-            <div className="flex justify-between"><span>Вариативность реакции (SD RT, стандартное отклонение), мс</span><span>{liveSdRt}</span></div>
-          </div>
+          {devMode && (
+            <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+              <div className="flex justify-between"><span>Ошибки пропуска (Omissions)</span><span>{liveMisses}</span></div>
+              <div className="flex justify-between"><span>Ошибки ложного отклика (Commissions)</span><span>{liveFalseAlarms}</span></div>
+              <div className="flex justify-between"><span>Среднее время реакции (Mean RT), мс</span><span>{liveMeanRt}</span></div>
+              <div className="flex justify-between"><span>Вариативность реакции (SD RT, стандартное отклонение), мс</span><span>{liveSdRt}</span></div>
+            </div>
+          )}
         </div>
         
         <div className="text-center">
@@ -344,9 +350,11 @@ export const CPTTest = ({ onComplete, onSkip }: CPTTestProps) => {
           <p className="mt-4 text-sm text-muted-foreground">
             Нажмите пробел, если видите букву X
           </p>
-          <div className="mt-6">
-            <Button variant="outline" onClick={handleSkip}>Пропустить тест</Button>
-          </div>
+          {devMode && (
+            <div className="mt-6">
+              <Button variant="outline" onClick={handleSkip}>Пропустить тест</Button>
+            </div>
+          )}
         </div>
       </div>
     );

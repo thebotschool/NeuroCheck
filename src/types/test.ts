@@ -83,6 +83,7 @@ export interface UserData {
 
 export type TestStep = 
   | 'promo-check' 
+  | 'name-step'
   | 'user-data' 
   | 'time-check' 
   | 'cpt-test' 

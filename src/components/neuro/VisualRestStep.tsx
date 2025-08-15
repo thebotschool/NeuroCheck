@@ -6,15 +6,14 @@ import { Play, RotateCcw, ArrowRight } from 'lucide-react';
 interface VisualRestStepProps {
   onContinue: () => void;
   durationMs?: number; // how long to wait before enabling continue button
-  // Optional dev bypass to show a testing button before timer completes
-  devBypass?: boolean;
+  devMode?: boolean;
 }
 
-export const VisualRestStep = ({ onContinue, durationMs = 60000, devBypass = false }: VisualRestStepProps) => {
+export const VisualRestStep = ({ onContinue, durationMs = 60000, devMode = false }: VisualRestStepProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [showContinueButton, setShowContinueButton] = useState(false);
   const [remainingMs, setRemainingMs] = useState(durationMs);
-  const showDevControls = import.meta.env.VITE_SHOW_DEV_CONTROLS === 'true' || devBypass;
+  const showDevControls = import.meta.env.VITE_SHOW_DEV_CONTROLS === 'true' || devMode;
 
   useEffect(() => {
     setIsPlaying(true);

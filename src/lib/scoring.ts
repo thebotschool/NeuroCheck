@@ -26,14 +26,37 @@ export function scoreGoNoGo(gng: GoNoGoResult, age: number): 1 | 2 | 3 | 4 {
 }
 
 export function scoreMemory(mem: MemoryResult, age: number): 1 | 2 | 3 | 4 {
-  const correct = mem.correctPositions ?? mem.correctCards;
-  const total = mem.totalCards;
-  const accuracy = (correct / total) * 100;
-  let score: 1 | 2 | 3 | 4 = 4 as const;
-  if (accuracy < 40) score = 1;
-  else if (accuracy < 60) score = 2;
-  else if (accuracy < 80) score = 3;
+  // Map accuracy to numeric score (1..4) where 4 = best
+  // User-specified Z mapping:
+  // >=85% => Z1 (best)  -> numeric 4
+  // 70-84% => Z2         -> numeric 3
+  // 50-69% => Z3         -> numeric 2
+  // <50%   => Z4 (worst) -> numeric 1
+  const correct = mem.correctPositions ?? mem.correctCards ?? 0;
+  const total = mem.totalCards || 0;
+  const accuracy = total > 0 ? (correct / total) * 100 : 0;
+  let score: 1 | 2 | 3 | 4 = 1 as const;
+  if (accuracy >= 85) score = 4;
+  else if (accuracy >= 70) score = 3;
+  else if (accuracy >= 50) score = 2;
+  else score = 1;
   return score;
+}
+
+// Helper: return Z-code label exactly as specified by the user
+export function scoreMemoryZ(mem: MemoryResult, age: number): 'Z1' | 'Z2' | 'Z3' | 'Z4' {
+  const numeric = scoreMemory(mem, age);
+  // numeric: 4 -> Z1, 3 -> Z2, 2 -> Z3, 1 -> Z4
+  switch (numeric) {
+    case 4:
+      return 'Z1';
+    case 3:
+      return 'Z2';
+    case 2:
+      return 'Z3';
+    default:
+      return 'Z4';
+  }
 }
 
 export function buildSummaryKey(x: number, y: number, z: number) {
@@ -71,6 +94,41 @@ export function buildFeedbackHtml(summaryKey: string, cpt: CPTResult, gng: GoNoG
       <p class="text-sm text-muted-foreground">Бета-версия скоринга. Для клинического использования требуется уточнение порогов.</p>
     </div>
   </div>`;
+}
+
+// Returns the same feedback as `buildFeedbackHtml` but formatted as Markdown
+export function buildFeedbackMarkdown(summaryKey: string, cpt: CPTResult, gng: GoNoGoResult, mem: MemoryResult) {
+  const rts = Array.isArray(cpt.reactionTimes) ? cpt.reactionTimes : [];
+  const amplitude = rts.length > 0 ? Math.max(...rts) - Math.min(...rts) : 0;
+  const rightMean = gng.rightHand?.averageReactionTime ?? (gng.reactionTimes && gng.reactionTimes.length ? gng.reactionTimes.reduce((a, b) => a + b, 0) / gng.reactionTimes.length : 0);
+  const leftMean = gng.leftHand?.averageReactionTime ?? 0;
+  const meanDiffHands = rightMean && leftMean ? Math.abs(Math.round(leftMean - rightMean)) : 0;
+
+  const cptAccuracy = cpt.accuracy ?? 0;
+  const cptMean = cpt.averageReactionTime ?? 0;
+  const memAccuracy = mem.accuracy ?? 0;
+  const gngAccuracy = gng.accuracy ?? 0;
+
+  return [
+    `### Результаты нейропсихологического тестирования`,
+    ``,
+    `**Ключ:** \`${summaryKey}\``,
+    ``,
+    `#### Внимание (CPT)`,
+    `- Точность: ${cptAccuracy.toFixed(1)}%`,
+    `- Среднее время реакции (Mean RT): ${Math.round(cptMean)} мс`,
+    `- Вариативность реакции (SD / amplitude): ${Math.round(amplitude)} мс`,
+    ``,
+    `#### Самоконтроль (Go/No-Go)`,
+    `- Точность: ${gngAccuracy.toFixed(1)}%`,
+    `- Разница среднего времени реакции между руками: ${meanDiffHands} мс`,
+    ``,
+    `#### Память`,
+    `- Точность: ${memAccuracy.toFixed(1)}%`,
+    ``,
+    `> Бета-версия скоринга. Для клинического использования требуется уточнение порогов.`,
+    ``
+  ].join('\n');
 }
 
 

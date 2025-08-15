@@ -8,8 +8,7 @@ import { toast } from '@/hooks/use-toast';
 interface MemoryTestProps {
   onComplete: (results: MemoryResult) => void;
   age: number;
-  // temporary dev bypass to skip distractor
-  devBypass?: boolean;
+  devMode?: boolean;
 }
 
 const DISPLAY_PER_CARD_MS = 1500; // 1.5 seconds per card
@@ -28,7 +27,7 @@ const CARD_IMAGES = [
   { id: 10, shape: 'star', color: 'bg-teal-500' },
 ];
 
-export const MemoryTest = ({ onComplete, age, devBypass = false }: MemoryTestProps) => {
+export const MemoryTest = ({ onComplete, age, devMode = false }: MemoryTestProps) => {
   type Phase = 'instructions' | 'memorize' | 'distract' | 'reconstruct' | 'complete';
   const [phase, setPhase] = useState<Phase>('instructions');
   const sequenceLength = useMemo(() => {
@@ -76,7 +75,7 @@ export const MemoryTest = ({ onComplete, age, devBypass = false }: MemoryTestPro
     return () => clearTimeout(t);
   }, [phase, currentMemorizeIndex, sequenceLength]);
 
-  const showDevControls = import.meta.env.VITE_SHOW_DEV_CONTROLS === 'true' || devBypass;
+  const showDevControls = import.meta.env.VITE_SHOW_DEV_CONTROLS === 'true' || devMode;
 
   // Distractor countdown
   useEffect(() => {
