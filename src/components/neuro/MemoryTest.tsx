@@ -31,9 +31,9 @@ export const MemoryTest = ({ onComplete, age, devMode = false }: MemoryTestProps
   type Phase = 'instructions' | 'memorize' | 'distract' | 'reconstruct' | 'complete';
   const [phase, setPhase] = useState<Phase>('instructions');
   const sequenceLength = useMemo(() => {
-    if (age >= 19) return 10;
-    if (age >= 14) return 8;
-    return 6; // 7–13
+    if (age >= 4) return 10; // 19+
+    if (age >= 2) return 8;  // 11-18
+    return 6; // 7-10
   }, [age]);
 
   const [targetSequence, setTargetSequence] = useState<typeof CARD_IMAGES>([]);
@@ -244,13 +244,16 @@ export const MemoryTest = ({ onComplete, age, devMode = false }: MemoryTestProps
             <CardDescription>Осталось: {mm}:{ss}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="aspect-video rounded-lg overflow-hidden bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800 flex items-center justify-center">
-              <div className="relative w-48 h-48">
-                <div className="absolute inset-0 rounded-full bg-emerald-400/20 animate-ping" />
-                <div className="absolute inset-4 rounded-full bg-emerald-400/20 animate-ping [animation-delay:200ms]" />
-                <div className="absolute inset-8 rounded-full bg-emerald-400/20 animate-ping [animation-delay:400ms]" />
-                <div className="absolute inset-12 rounded-full bg-emerald-400/30" />
-              </div>
+            <div className="aspect-video rounded-lg overflow-hidden bg-black">
+              <iframe
+                src="https://player.vimeo.com/video/1110248215?autoplay=1&loop=1&autopause=0&muted=1"
+                width="100%"
+                height="100%"
+                frameBorder="0"
+                allow="autoplay; fullscreen; picture-in-picture"
+                allowFullScreen
+                title="Vimeo video player"
+              ></iframe>
             </div>
             {showDevControls && (
               <div className="mt-4 flex justify-center">

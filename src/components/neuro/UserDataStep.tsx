@@ -21,14 +21,21 @@ interface UserDataStepProps {
 }
 
 export const UserDataStep = ({ userId, onSuccess, onGlobalLoading, initialName, progress, onBack }: UserDataStepProps) => {
-  // keep hidden age state to be set by the next screen (age bucket)
-  const [age, setAge] = useState('7');
+  const [age, setAge] = useState<number | null>(null);
   const [childName, setChildName] = useState(initialName ?? '');
   const [email, setEmail] = useState('');
   const [consentAgreed, setConsentAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async () => {
+  const ageGroupMapping: Record<string, number> = {
+    '7-10': 1,
+    '11-14': 2,
+    '15-18': 3,
+    '19-22': 4,
+    '23+': 5,
+  };
+
+  const handleSubmit = async (ageValue?: number) => {
     // DEBUG: read auth session for logging; but do not require it.
     const authResp = await supabase.auth.getUser();
     const authId = authResp?.data?.user?.id;
@@ -52,16 +59,22 @@ export const UserDataStep = ({ userId, onSuccess, onGlobalLoading, initialName, 
       return;
     }
 
+    const ageToSave = ageValue ?? age;
+    if (ageToSave === null) {
+      toast({ title: 'Ошибка', description: 'Возраст не выбран', variant: 'destructive' });
+      return;
+    }
+
     try {
       setLoading(true);
       onGlobalLoading && onGlobalLoading(true);
-  // Use upsert to avoid duplicate key errors if a user row was created earlier
+      // Use upsert to avoid duplicate key errors if a user row was created earlier
       const { data, error } = await supabase
         .from('users')
         .upsert(
           {
-    user_id: effectiveUserId,
-            age: age ? parseInt(age) : null,
+            user_id: effectiveUserId,
+            age: ageToSave,
             email,
             consent_agreed: consentAgreed,
             child_name: childName || null,
@@ -132,21 +145,15 @@ export const UserDataStep = ({ userId, onSuccess, onGlobalLoading, initialName, 
   };
 
   const handleAgeBucketSelect = (bucket: string) => {
-    // Map bucket to a concrete age value for the slider/store. We'll pick the lower bound.
-    const mapping: Record<string, number> = {
-      '7-9': 7,
-      '10-13': 10,
-      '14-18': 14,
-      '18-22': 18,
-      '23+': 23,
-    };
-    const mapped = mapping[bucket] ?? 7;
-    setAge(String(mapped));
-  // After selecting age, proceed to submit but keep the age selection
-  // screen visible until submission completes to avoid flashing the
-  // registration screen briefly. Keep a short delay so the user sees
-  // the selection highlight.
-  setTimeout(() => handleSubmit(), 300);
+    const ageValue = ageGroupMapping[bucket] || null;
+    setAge(ageValue);
+    // After selecting age, proceed to submit but keep the age selection
+    // screen visible until submission completes to avoid flashing the
+    // registration screen briefly. Keep a short delay so the user sees
+    // the selection highlight.
+    if (ageValue !== null) {
+      setTimeout(() => handleSubmit(ageValue), 300);
+    }
   };
 
   if (showAgeSelect) {

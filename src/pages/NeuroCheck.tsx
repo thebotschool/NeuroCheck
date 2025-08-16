@@ -6,7 +6,7 @@ import NameStep from '@/components/neuro/NameStep';
 import { CPTTest } from '@/components/neuro/CPTTest';
 import { HandSwitchStep } from '@/components/neuro/HandSwitchStep';
 import { GoNoGoTest } from '@/components/neuro/GoNoGoTest';
-import { VisualRestStep } from '@/components/neuro/VisualRestStep';
+import { VideoRestStep } from '@/components/neuro/VideoRestStep';
 import { MemoryTest } from '@/components/neuro/MemoryTest';
 import { ResultsStep } from '@/components/neuro/ResultsStep';
 import { useTestSession } from '@/hooks/useTestSession';
@@ -26,6 +26,7 @@ const NeuroCheck = () => {
   const [memoryResults, setMemoryResults] = useState<MemoryResult | null>(null);
   const [restContext, setRestContext] = useState<'after-cpt' | 'after-gonogo' | null>(null);
   const [devMode, setDevMode] = useState(false);
+  const [vimeoVideoId, setVimeoVideoId] = useState<string>('');
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -50,7 +51,7 @@ const NeuroCheck = () => {
       case 'name-step': setProgress(0.05); break; // 5%
       case 'user-data': setProgress(0.1); break; // 10%
       case 'cpt-test': setProgress(0.15); break; // age finished -> 15%
-      case 'visual-rest':
+      case 'video-rest':
         setProgress(restContext === 'after-cpt' ? 0.4 : 0.7);
         break;
       case 'hand-switch': setProgress(0.55); break;
@@ -79,7 +80,8 @@ const NeuroCheck = () => {
     await saveCPTResults(results);
     setFirstTestCompleted(true);
     setRestContext('after-cpt');
-    setCurrentStep('visual-rest');
+    setVimeoVideoId('1110248153');
+    setCurrentStep('video-rest');
   };
 
   const handleCPTSkipToRest = async (results: CPTResult) => {
@@ -87,17 +89,19 @@ const NeuroCheck = () => {
     await saveCPTResults(results);
     setFirstTestCompleted(true);
     setRestContext('after-cpt');
-    setCurrentStep('visual-rest');
+    setVimeoVideoId('1110248153');
+    setCurrentStep('video-rest');
   };
 
   const handleGoNoGoComplete = async (results: GoNoGoResult) => {
     setGonogoResults(results);
     await saveGoNoGoResults(results);
     setRestContext('after-gonogo');
-    setCurrentStep('visual-rest');
+    setVimeoVideoId('1110248186');
+    setCurrentStep('video-rest');
   };
 
-  const handleVisualRestContinue = () => {
+  const handleVideoRestContinue = () => {
     if (restContext === 'after-cpt') {
       setRestContext(null);
       setCurrentStep('gonogo-test');
@@ -114,10 +118,6 @@ const NeuroCheck = () => {
     await saveMemoryResults(results);
     await completeSession();
     setCurrentStep('results');
-  };
-
-  const handleDownloadPDF = () => {
-    toast({ title: 'PDF генерируется', description: 'Файл будет готов через несколько секунд' });
   };
 
   if (isMobile) return <MobileBlocked onBackToLanding={() => setCurrentStep('promo-check')} />;
@@ -163,19 +163,19 @@ const NeuroCheck = () => {
       break;
 
     case 'cpt-test':
-      content = <CPTTest onComplete={handleCPTComplete} onSkip={handleCPTSkipToRest} devMode={devMode} />;
+      content = <CPTTest onComplete={handleCPTComplete} onSkip={handleCPTSkipToRest} devMode={devMode} userData={userData} />;
       break;
 
     case 'gonogo-test':
       content = <GoNoGoTest onComplete={handleGoNoGoComplete} devMode={devMode} />;
       break;
 
-    case 'visual-rest':
-      content = <VisualRestStep onContinue={handleVisualRestContinue} durationMs={120000} devMode={devMode} />;
+    case 'video-rest':
+      content = <VideoRestStep onContinue={handleVideoRestContinue} vimeoVideoId={vimeoVideoId} devMode={devMode} />;
       break;
 
     case 'memory-test':
-      content = <MemoryTest onComplete={handleMemoryComplete} age={userData?.age ?? 18} devMode={devMode} />;
+      content = <MemoryTest onComplete={handleMemoryComplete} age={userData?.age ?? 3} devMode={devMode} />;
       break;
 
     case 'results':
@@ -187,7 +187,7 @@ const NeuroCheck = () => {
             cptResults={cptResults}
             gonogoResults={gonogoResults}
             memoryResults={memoryResults}
-            onDownloadPDF={handleDownloadPDF}
+            devMode={devMode}
           />
         );
       break;

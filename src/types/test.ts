@@ -89,7 +89,7 @@ export type TestStep =
   | 'cpt-test' 
   | 'hand-switch' 
   | 'gonogo-test' 
-  | 'visual-rest' 
+  | 'video-rest' 
   | 'memory-test' 
   | 'results' 
   | 'report';

@@ -6,67 +6,87 @@ import { Card, CardContent } from "@/components/ui/card";
 export default function LandingPage() {
   const navigate = useNavigate();
 
-  const start = () => {
-    // navigate to the test flow (promo/payment step)
-    navigate('/test');
-  };
-
   return (
     <div className="min-h-screen bg-white text-gray-900 px-6 py-12 space-y-24">
       {/* Hero Section */}
       <section className="max-w-3xl mx-auto text-center space-y-6">
         <h1 className="text-4xl font-bold leading-tight">
-          NeuroCheck — цифровая диагностика учебных функций
+          NeuroCheck — цифровое исследование учебных функций школьника
         </h1>
         <p className="text-lg text-gray-600">
-          Повышаем продуктивность: внимание, самоконтроль и память — всего за 6 минут, без специалистов.
+          Помогаем понять, как работают внимание, самоконтроль и память — за 15 минут, без сложного оборудования и без присутствия специалистов.
         </p>
-        <Button className="text-lg px-6 py-4" onClick={start}>Начать тест — бесплатно</Button>
+        <Button className="text-lg px-6 py-4" onClick={() => navigate('/payment')}>Начать тест</Button>
       </section>
 
-      {/* Who it's for */}
-      <section className="max-w-4xl mx-auto grid md:grid-cols-2 gap-12 items-start">
-        <div className="space-y-4">
-          <h2 className="text-2xl font-semibold">Кому это поможет</h2>
-          <ul className="list-disc list-inside text-gray-700 space-y-2">
-            <li>Родителям, которые не понимают, почему учеба идёт тяжело.</li>
-            <li>Семьям, стремящимся сделать обучение продуктивнее и спокойнее.</li>
-            <li>Тем, кто хочет понять, как работает внимание, самоконтроль и память у ребёнка.</li>
-          </ul>
-        </div>
-        <Card>
-          <CardContent className="p-6 text-gray-600">
-            Короткий тест покажет зоны силы и развития — и даст PDF‑отчёт с персональными рекомендациями.
-          </CardContent>
-        </Card>
-      </section>
-
-      {/* How it works */}
-      <section className="max-w-4xl mx-auto space-y-6 text-center">
-        <h2 className="text-2xl font-semibold">Как проходит диагностика</h2>
+      {/* Для кого */}
+      <section className="max-w-4xl mx-auto space-y-6">
+        <h2 className="text-2xl font-semibold text-center">Для кого</h2>
         <div className="grid md:grid-cols-3 gap-6 text-left">
-          <Card><CardContent className="p-6">3 задания по 2 минуты: внимание, контроль, память</CardContent></Card>
-          <Card><CardContent className="p-6">Между ними — короткие паузы на отдых</CardContent></Card>
-          <Card><CardContent className="p-6">Ребёнок проходит самостоятельно, всё онлайн</CardContent></Card>
+          <Card>
+            <CardContent className="p-6">
+              <h3 className="font-semibold mb-2">Родителям</h3>
+              <p className="text-gray-700">Которые хотят разобраться, почему учёба даётся легко или трудно, и как поддержать ребёнка.</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6">
+              <h3 className="font-semibold mb-2">Учителям и школам</h3>
+              <p className="text-gray-700">Которые ищут способы повысить учебную продуктивность класса или отдельных учеников.</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6">
+              <h3 className="font-semibold mb-2">Психологам и тьюторам</h3>
+              <p className="text-gray-700">Которые используют данные о когнитивных функциях для индивидуальной работы с детьми.</p>
+            </CardContent>
+          </Card>
         </div>
       </section>
 
-      {/* Report Example */}
-      <section className="max-w-4xl mx-auto space-y-4 text-center">
-        <h2 className="text-2xl font-semibold">Что будет в отчёте</h2>
-        <p className="text-gray-600">
-          Вы получите понятный PDF с обратной связью от психолога и чёткими советами:
-        </p>
+      {/* Как это работает */}
+      <section className="max-w-4xl mx-auto space-y-6">
+        <h2 className="text-2xl font-semibold text-center">Как это работает</h2>
+        <p className="text-center text-gray-600">В основе — три научно обоснованных задания, изучающих ключевые механизмы, необходимые для успешной учёбы:</p>
+        <div className="grid md:grid-cols-3 gap-6 text-left">
+          <Card><CardContent className="p-6"><b>Внимание</b> — способность сосредотачиваться и удерживать фокус.</CardContent></Card>
+          <Card><CardContent className="p-6"><b>Самоконтроль</b> — умение сдерживать импульсы и действовать обдуманно.</CardContent></Card>
+          <Card><CardContent className="p-6"><b>Рабочая память</b> — возможность удерживать и использовать информацию в процессе решения задач.</CardContent></Card>
+        </div>
+        <p className="text-center text-sm text-gray-500">Всего 3 задания по 2 минуты, с короткими паузами между ними. Всё проходит онлайн, ребёнок выполняет самостоятельно.</p>
+      </section>
+
+      {/* Что вы получите */}
+      <section className="max-w-4xl mx-auto space-y-6 text-center">
+        <h2 className="text-2xl font-semibold">Что вы получите</h2>
+        <p className="text-gray-600">После прохождения вы получите PDF-отчёт, в котором:</p>
         <ul className="list-disc list-inside text-left mx-auto max-w-xl text-gray-700 space-y-2">
-          <li>Для дома — как организовать задания и рутину</li>
-          <li>Для школы — как лучше взаимодействовать и развивать навыки</li>
-          <li>Сильные и уязвимые стороны ребёнка</li>
+          <li>Чётко описаны сильные стороны и зоны для развития ребёнка.</li>
+          <li>Даны персональные рекомендации для дома и школы:
+            <ul className="list-disc list-inside ml-6 mt-2">
+              <li>как организовать учебную среду;</li>
+              <li>какие упражнения и игры помогут укрепить навыки;</li>
+              <li>как поддерживать мотивацию и внимание.</li>
+            </ul>
+          </li>
+          <li>Отмечены особенности, которые стоит учитывать в учёбе и повседневной жизни.</li>
+        </ul>
+      </section>
+
+      {/* Почему это важно */}
+      <section className="max-w-4xl mx-auto space-y-6">
+        <h2 className="text-2xl font-semibold text-center">Почему это важно</h2>
+        <p className="text-center text-gray-600">Учебный успех напрямую связан с качеством работы внимания, самоконтроля и памяти. Понимание этих процессов позволяет:</p>
+        <ul className="list-disc list-inside text-left mx-auto max-w-xl text-gray-700 space-y-2">
+          <li><b>родителям</b> — создать комфортные условия для учёбы дома;</li>
+          <li><b>учителям</b> — эффективнее взаимодействовать с учеником;</li>
+          <li><b>специалистам</b> — строить целевые программы развития.</li>
         </ul>
       </section>
 
       {/* Final CTA */}
       <section className="text-center">
-        <Button className="text-lg px-8 py-4" onClick={start}>Пройти диагностику сейчас</Button>
+        <Button className="text-lg px-8 py-4" onClick={() => navigate('/payment')}>Пройти диагностику</Button>
       </section>
 
       {/* Footer */}

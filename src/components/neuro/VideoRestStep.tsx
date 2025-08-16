@@ -1,23 +1,22 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Play, RotateCcw, ArrowRight } from 'lucide-react';
+import { Play, ArrowRight, RotateCcw } from 'lucide-react';
 
-interface VisualRestStepProps {
+interface VideoRestStepProps {
   onContinue: () => void;
-  durationMs?: number; // how long to wait before enabling continue button
+  vimeoVideoId: string;
+  durationMs?: number;
   devMode?: boolean;
 }
 
-export const VisualRestStep = ({ onContinue, durationMs = 60000, devMode = false }: VisualRestStepProps) => {
-  const [isPlaying, setIsPlaying] = useState(false);
+export const VideoRestStep = ({ onContinue, vimeoVideoId, durationMs = 120000, devMode = false }: VideoRestStepProps) => {
   const [showContinueButton, setShowContinueButton] = useState(false);
   const [remainingMs, setRemainingMs] = useState(durationMs);
   const showDevControls = import.meta.env.VITE_SHOW_DEV_CONTROLS === 'true' || devMode;
 
   useEffect(() => {
-    setIsPlaying(true);
-    setRemainingMs(durationMs);
     const startedAt = Date.now();
     const i = setInterval(() => {
       const elapsed = Date.now() - startedAt;
@@ -25,41 +24,44 @@ export const VisualRestStep = ({ onContinue, durationMs = 60000, devMode = false
       setRemainingMs(remain);
       if (remain <= 0) {
         setShowContinueButton(true);
-        setIsPlaying(false);
         clearInterval(i);
       }
     }, 250);
+
     return () => clearInterval(i);
   }, [durationMs]);
+
+  const vimeoSrc = `https://player.vimeo.com/video/${vimeoVideoId}?autoplay=1&loop=1&autopause=0&muted=1`;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-accent/5 p-4">
       <Card className="w-full max-w-2xl">
-          <CardHeader className="text-center">
+        <CardHeader className="text-center">
           <CardTitle className="flex items-center justify-center gap-2">
             <Play className="h-6 w-6" />
-            Визуальный отдых
+            Видео-перерыв
           </CardTitle>
           <CardDescription>
-            Расслабьтесь и сосредоточьтесь на спокойной анимации
+            Посмотрите видео, чтобы отдохнуть и восстановить концентрацию.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="aspect-video rounded-lg overflow-hidden bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800 flex items-center justify-center">
-              {/* Simple local animation: pulsing concentric circles */}
-              <div className="relative w-48 h-48">
-                <div className="absolute inset-0 rounded-full bg-sky-400/20 animate-ping" />
-                <div className="absolute inset-4 rounded-full bg-sky-400/20 animate-ping [animation-delay:200ms]" />
-                <div className="absolute inset-8 rounded-full bg-sky-400/20 animate-ping [animation-delay:400ms]" />
-                <div className="absolute inset-12 rounded-full bg-sky-400/30" />
-              </div>
-            </div>
-
+          <div className="aspect-video rounded-lg overflow-hidden bg-black">
+            <iframe
+              src={vimeoSrc}
+              width="100%"
+              height="100%"
+              frameBorder="0"
+              allow="autoplay; fullscreen; picture-in-picture"
+              allowFullScreen
+              title="Vimeo video player"
+            ></iframe>
+          </div>
           <div className="text-center space-y-4">
             <p className="text-muted-foreground">
               Наслаждайтесь перерывом. Кнопка разблокируется по таймеру
             </p>
-              <div className="text-xs text-muted-foreground">Осталось: <span className="font-mono">{String(Math.floor(remainingMs/60000)).padStart(2,'0')}:{String(Math.floor((remainingMs%60000)/1000)).padStart(2,'0')}</span></div>
+            <div className="text-xs text-muted-foreground">Осталось: <span className="font-mono">{String(Math.floor(remainingMs/60000)).padStart(2,'0')}:{String(Math.floor((remainingMs%60000)/1000)).padStart(2,'0')}</span></div>
             
             {!showContinueButton && (
               <div className="space-y-3">
