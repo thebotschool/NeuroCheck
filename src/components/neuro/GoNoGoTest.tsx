@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
+
 import { Timer } from '@/components/neuro/Timer';
 import { GoNoGoResult } from '@/types/test';
 import { toast } from '@/hooks/use-toast';
@@ -36,6 +36,7 @@ export const GoNoGoTest = ({ onComplete, devMode = false }: GoNoGoTestProps) => 
   const [appearId, setAppearId] = useState<number>(0);
   const [rightFalseAlarmsCount, setRightFalseAlarmsCount] = useState<number>(0);
   const [leftFalseAlarmsCount, setLeftFalseAlarmsCount] = useState<number>(0);
+  const [feedback, setFeedback] = useState(false);
 
   const [rightResponses, setRightResponses] = useState<Array<{ stimulus: 'green' | 'red'; responded: boolean; reactionTime: number | null; timestamp: number; hrStart?: number }>>([]);
   const [leftResponses, setLeftResponses] = useState<Array<{ stimulus: 'green' | 'red'; responded: boolean; reactionTime: number | null; timestamp: number; hrStart?: number }>>([]);
@@ -53,13 +54,16 @@ export const GoNoGoTest = ({ onComplete, devMode = false }: GoNoGoTestProps) => 
     return seq;
   }, []);
 
-  const isTestPhase = (p: Phase) => p === 'testRight' || p === 'testLeft';
-  const isPracticePhase = (p: Phase) => p === 'practiceRight' || p === 'practiceLeft';
+  const isTestPhase = useCallback((p: Phase) => p === 'testRight' || p === 'testLeft', []);
+  const isPracticePhase = useCallback((p: Phase) => p === 'practiceRight' || p === 'practiceLeft', []);
 
   const handleKeyPress = useCallback((event: KeyboardEvent) => {
     const isSpace = event.code === 'Space' || event.key === ' ' || event.key === 'Spacebar';
     if (!isSpace) return;
     if (event.repeat) return;
+
+    setFeedback(true);
+    setTimeout(() => setFeedback(false), 150);
     if (!(isTestPhase(phase) || isPracticePhase(phase))) return;
     if (!currentStimulusRef.current) return;
     event.preventDefault();
@@ -121,20 +125,22 @@ export const GoNoGoTest = ({ onComplete, devMode = false }: GoNoGoTestProps) => 
     // Close response window to avoid repeats leaking into next stimulus
     responseWindowOpenRef.current = false;
     nextAllowedTsRef.current = now + REFRACTORY_MS;
-  }, [phase, rightResponses, leftResponses]);
+  }, [phase, rightResponses, leftResponses, isTestPhase, isPracticePhase]);
+
+    
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [handleKeyPress]);
 
-  const startBlock = (nextPhase: Phase) => {
+  const startBlock = useCallback((nextPhase: Phase) => {
     setPhase(nextPhase);
     setStimulusIndex(0);
     setSequence(generateSequence(Math.floor(BLOCK_DURATION_MS / STIMULUS_DURATION)));
     setBlockStartTime(Date.now());
     setRemainingMs(BLOCK_DURATION_MS);
-  };
+  }, [generateSequence]);
 
   const startTest = () => {
     toast({
@@ -194,7 +200,7 @@ export const GoNoGoTest = ({ onComplete, devMode = false }: GoNoGoTestProps) => 
         setPhase('complete');
       }
     }
-  }, [phase, stimulusIndex, sequence, generateSequence]);
+  }, [phase, stimulusIndex, sequence, generateSequence, isTestPhase, isPracticePhase, startBlock]);
 
   useEffect(() => {
     if (!isTestPhase(phase)) return;
@@ -208,9 +214,9 @@ export const GoNoGoTest = ({ onComplete, devMode = false }: GoNoGoTestProps) => 
       }
     }, 250);
     return () => clearInterval(i);
-  }, [phase, blockStartTime, sequence.length]);
+  }, [phase, blockStartTime, sequence.length, isTestPhase]);
 
-  const computeHand = (arr: typeof rightResponses) => {
+  const computeHand = useCallback((arr: typeof rightResponses) => {
     const correctGo = arr.filter(r => r.stimulus === 'green' && r.responded).length;
     const missedGo = arr.filter(r => r.stimulus === 'green' && !r.responded).length;
     const falseAlarms = arr.filter(r => r.stimulus === 'red' && r.responded).length;
@@ -225,7 +231,7 @@ export const GoNoGoTest = ({ onComplete, devMode = false }: GoNoGoTestProps) => 
       return Math.sqrt(variance);
     })();
     return { correctGo, missedGo, falseAlarms, correctNoGo, reactionTimes: rts, averageReactionTime, sdReactionTime };
-  };
+  }, []);
 
   useEffect(() => {
     if (phase !== 'complete') return;
@@ -271,14 +277,10 @@ export const GoNoGoTest = ({ onComplete, devMode = false }: GoNoGoTestProps) => 
       reactionTimes: combinedRTs,
       averageReactionTime,
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase]);
 
-  const progress = useMemo(() => {
-    if (!isTestPhase(phase)) return 0;
-    const total = BLOCK_DURATION_MS;
-    const spent = total - remainingMs;
-    return Math.min(100, Math.max(0, (spent / total) * 100));
-  }, [phase, remainingMs]);
+  
 
   const handleSkip = () => {
     // Skip behavior: from right-hand phases → hand switch screen;
@@ -322,7 +324,7 @@ export const GoNoGoTest = ({ onComplete, devMode = false }: GoNoGoTestProps) => 
       activeSdRt: sdRt,
       meanDiffBetweenHands: meanDiff,
     };
-  }, [phase, rightResponses, leftResponses, rightFalseAlarmsCount, leftFalseAlarmsCount]);
+    }, [phase, rightResponses, leftResponses, rightFalseAlarmsCount, leftFalseAlarmsCount]);
 
   if (phase === 'instructions') {
     return (
@@ -367,12 +369,12 @@ export const GoNoGoTest = ({ onComplete, devMode = false }: GoNoGoTestProps) => 
 
   if (isTestPhase(phase) || isPracticePhase(phase)) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-primary/5 to-accent/5 p-4">
+      <div className={`min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-primary/5 to-accent/5 p-4 transition-all ${feedback ? 'border-4 border-blue-400' : 'border-4 border-transparent'}`}>
         <div className="w-full max-w-md mb-8 relative">
           {isTestPhase(phase) && (
             <Timer durationMs={BLOCK_DURATION_MS} className="absolute -top-6 right-0 text-xs text-muted-foreground" />
           )}
-          <Progress value={progress} className="h-2" />
+          
           <p className="text-center text-sm text-muted-foreground mt-2">
             {isPracticePhase(phase) ? 'Пробные стимулы' : 'Идёт блок'} · {phase === 'testRight' || phase === 'practiceRight' ? 'ПРАВАЯ рука' : 'ЛЕВАЯ рука'}
           </p>

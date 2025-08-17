@@ -17,7 +17,7 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 220 15% 15%;
 
-    --primary: 213 89% 56%;
+    --primary: 262 83% 58%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 220 15% 95%;
@@ -26,7 +26,7 @@ All colors MUST be HSL.
     --muted: 220 15% 96%;
     --muted-foreground: 220 10% 45%;
 
-    --accent: 213 89% 56%;
+    --accent: 262 83% 58%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
@@ -34,7 +34,7 @@ All colors MUST be HSL.
 
     --border: 220 15% 90%;
     --input: 220 15% 90%;
-    --ring: 213 89% 56%;
+    --ring: 262 83% 58%;
 
     /* NeuroCheck specific colors */
     --neuro-blue: 213 89% 56%;
@@ -73,7 +73,7 @@ All colors MUST be HSL.
     --popover: 220 15% 12%;
     --popover-foreground: 220 15% 92%;
 
-    --primary: 213 89% 56%;
+    --primary: 262 83% 65%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 220 15% 15%;
@@ -82,7 +82,7 @@ All colors MUST be HSL.
     --muted: 220 15% 15%;
     --muted-foreground: 220 10% 55%;
 
-    --accent: 213 89% 56%;
+    --accent: 262 83% 65%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
@@ -90,7 +90,7 @@ All colors MUST be HSL.
 
     --border: 220 15% 20%;
     --input: 220 15% 20%;
-    --ring: 213 89% 56%;
+    --ring: 262 83% 65%;
 
     /* Dark mode NeuroCheck colors */
     --neuro-blue: 213 89% 56%;

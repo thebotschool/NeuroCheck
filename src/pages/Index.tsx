@@ -6,7 +6,7 @@ const Index = () => {
       <div className="text-center max-w-2xl">
         <h1 className="text-4xl md:text-5xl font-bold mb-4">PROdetej — экспресс‑скрининг</h1>
         <p className="text-lg text-muted-foreground mb-8">
-          Современные когнитивные тесты: внимание (CPT), самоконтроль (Go/No-Go), рабочая память
+          Современные когнитивные тесты: внимание (TCP), самоконтроль (Go/No-Go), рабочая память
         </p>
         <Link
           to="/"

@@ -1,8 +1,7 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Play, ArrowRight, RotateCcw } from 'lucide-react';
+import { Play, ArrowRight, RotateCcw, Volume2, VolumeX } from 'lucide-react';
 
 interface VideoRestStepProps {
   onContinue: () => void;
@@ -14,7 +13,34 @@ interface VideoRestStepProps {
 export const VideoRestStep = ({ onContinue, vimeoVideoId, durationMs = 120000, devMode = false }: VideoRestStepProps) => {
   const [showContinueButton, setShowContinueButton] = useState(false);
   const [remainingMs, setRemainingMs] = useState(durationMs);
+  const [player, setPlayer] = useState<any>(null);
+  const [isMuted, setIsMuted] = useState(true);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const showDevControls = import.meta.env.VITE_SHOW_DEV_CONTROLS === 'true' || devMode;
+
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://player.vimeo.com/api/player.js';
+    script.async = true;
+    document.body.appendChild(script);
+
+    script.onload = () => {
+      if (iframeRef.current) {
+        const vimeoPlayer = new (window as any).Vimeo.Player(iframeRef.current);
+        setPlayer(vimeoPlayer);
+      }
+    };
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (player) {
+      player.setVolume(isMuted ? 0 : 0.5);
+    }
+  }, [player, isMuted]);
 
   useEffect(() => {
     const startedAt = Date.now();
@@ -31,7 +57,7 @@ export const VideoRestStep = ({ onContinue, vimeoVideoId, durationMs = 120000, d
     return () => clearInterval(i);
   }, [durationMs]);
 
-  const vimeoSrc = `https://player.vimeo.com/video/${vimeoVideoId}?autoplay=1&loop=1&autopause=0&muted=1`;
+  const vimeoSrc = `https://player.vimeo.com/video/${vimeoVideoId}?autoplay=1&loop=1&playsinline=1&dnt=1&controls=0&byline=0&title=0`;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-accent/5 p-4">
@@ -46,16 +72,24 @@ export const VideoRestStep = ({ onContinue, vimeoVideoId, durationMs = 120000, d
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="aspect-video rounded-lg overflow-hidden bg-black">
+          <div className="relative aspect-video rounded-lg overflow-hidden bg-black">
             <iframe
+              ref={iframeRef}
               src={vimeoSrc}
               width="100%"
               height="100%"
               frameBorder="0"
               allow="autoplay; fullscreen; picture-in-picture"
-              allowFullScreen
               title="Vimeo video player"
             ></iframe>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsMuted(prev => !prev)}
+              className="absolute bottom-2 right-2 rounded-full bg-black text-white hover:bg-gray-800"
+            >
+              {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+            </Button>
           </div>
           <div className="text-center space-y-4">
             <p className="text-muted-foreground">

@@ -5,10 +5,9 @@ import { ArrowLeft } from 'lucide-react';
 interface Props {
   onSelect: (ageBucket: string) => void; // '7-9' | '10-13' | '14-18' | '18-22' | '23+'
   onCancel?: () => void;
-  progressTarget?: number; // 0..1
 }
 
-export const AgeSelectAfterConsent: React.FC<Props> = ({ onSelect, onCancel, progressTarget = 0.2 }) => {
+export const AgeSelectAfterConsent: React.FC<Props> = ({ onSelect, onCancel }) => {
   const options = [
     { key: '7-10', label: '7–10 лет' },
     { key: '11-14', label: '11–14 лет' },
@@ -25,14 +24,6 @@ export const AgeSelectAfterConsent: React.FC<Props> = ({ onSelect, onCancel, pro
   };
 
   const [selected, setSelected] = useState<string | null>(null);
-  const [progress, setProgress] = useState(0);
-
-  useEffect(() => {
-    const target = Math.max(0, Math.min(1, progressTarget));
-    // animate to target after mount
-    const t = setTimeout(() => setProgress(target), 50);
-    return () => clearTimeout(t);
-  }, [progressTarget]);
 
   useEffect(() => {
     if (selected) {
@@ -46,19 +37,10 @@ export const AgeSelectAfterConsent: React.FC<Props> = ({ onSelect, onCancel, pro
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 to-accent/5 p-4">
       <div className="max-w-3xl mx-auto">
-        {/* Top progress bar with left arrow */}
         <div className="flex items-center gap-4 mb-6">
           <Button variant="ghost" size="icon" onClick={() => onCancel && onCancel()} aria-label="Назад">
             <ArrowLeft className="h-6 w-6" />
           </Button>
-          <div className="flex-1">
-            <div className="h-3 rounded-full bg-gray-200 overflow-hidden">
-              <div
-                className="h-3 rounded-full bg-black"
-                style={{ width: `${Math.round(progress * 100)}%`, transition: 'width 600ms cubic-bezier(.2,.9,.2,1)' }}
-              />
-            </div>
-          </div>
         </div>
 
         <div className="rounded-2xl p-4"> 
@@ -67,19 +49,17 @@ export const AgeSelectAfterConsent: React.FC<Props> = ({ onSelect, onCancel, pro
             <p className="text-xs text-muted-foreground text-center mt-2">Выберите одну из категорий возраста</p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="flex flex-col gap-4 max-w-sm mx-auto">
             {options.map((opt) => {
               const isSelected = selected === opt.key;
               return (
                 <Button
                   key={opt.key}
+                  variant="outline"
                   onClick={() => setSelected(opt.key)}
-                  className={
-                    `flex flex-row items-center justify-start gap-4 py-4 px-5 focus:outline-none transition-shadow text-left ` +
-                    (isSelected
-                      ? 'border-blue-500 shadow-md ring-1 ring-blue-100 rounded-2xl'
-                      : 'border border-gray-200 hover:border-blue-400 hover:shadow-sm hover:bg-white rounded-2xl')
-                  }
+                  className={`w-full flex flex-row items-center justify-start gap-4 py-8 px-5 text-left rounded-2xl ${
+                    isSelected ? 'border-blue-500 border-2 shadow-lg' : 'border-gray-200'
+                  }`}
                 >
                   <div className="text-2xl mr-3">{emojiMap[opt.key]}</div>
                   <span className="text-base font-medium">{opt.label}</span>

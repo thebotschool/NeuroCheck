@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 import { MemoryResult } from '@/types/test';
 import { toast } from '@/hooks/use-toast';
+import { Volume2, VolumeX } from 'lucide-react';
 
 interface MemoryTestProps {
   onComplete: (results: MemoryResult) => void;
@@ -14,70 +14,65 @@ interface MemoryTestProps {
 const DISPLAY_PER_CARD_MS = 1500; // 1.5 seconds per card
 const DISTRACTOR_MS = 120000; // 2 minutes
 
-const CARD_IMAGES = [
-  { id: 1, shape: 'circle', color: 'bg-blue-500' },
-  { id: 2, shape: 'square', color: 'bg-red-500' },
-  { id: 3, shape: 'triangle', color: 'bg-green-500' },
-  { id: 4, shape: 'diamond', color: 'bg-yellow-500' },
-  { id: 5, shape: 'star', color: 'bg-purple-500' },
-  { id: 6, shape: 'circle', color: 'bg-orange-500' },
-  { id: 7, shape: 'square', color: 'bg-pink-500' },
-  { id: 8, shape: 'triangle', color: 'bg-cyan-500' },
-  { id: 9, shape: 'diamond', color: 'bg-indigo-500' },
-  { id: 10, shape: 'star', color: 'bg-teal-500' },
-];
+const IMAGE_SRCS = Array.from({ length: 12 }, (_, i) => `/images/${i + 1}.png`);
 
 export const MemoryTest = ({ onComplete, age, devMode = false }: MemoryTestProps) => {
   type Phase = 'instructions' | 'memorize' | 'distract' | 'reconstruct' | 'complete';
   const [phase, setPhase] = useState<Phase>('instructions');
   const sequenceLength = useMemo(() => {
-    if (age >= 4) return 10; // 19+
+    if (age === 5) return 12; // 23+
+    if (age === 4) return 10; // 19-22
     if (age >= 2) return 8;  // 11-18
     return 6; // 7-10
   }, [age]);
 
-  const [targetSequence, setTargetSequence] = useState<typeof CARD_IMAGES>([]);
-  const [currentMemorizeIndex, setCurrentMemorizeIndex] = useState<number>(0);
+  const [targetSequence, setTargetSequence] = useState<string[]>([]);
+  const [currentMemorizeIndex, setCurrentMemorizeIndex] = useState<number>(1);
   const [remainingDistractMs, setRemainingDistractMs] = useState<number>(DISTRACTOR_MS);
 
   // Reconstruction state
-  const [poolCards, setPoolCards] = useState<typeof CARD_IMAGES>([]);
-  const [slots, setSlots] = useState<Array<number | null>>([]); // ids in order or null
-  const [draggingId, setDraggingId] = useState<number | null>(null);
+  const [poolCards, setPoolCards] = useState<string[]>([]);
+  const [slots, setSlots] = useState<Array<string | null>>([]); // image srcs in order or null
+  const [draggingSrc, setDraggingSrc] = useState<string | null>(null);
   const [reconstructionStart, setReconstructionStart] = useState<number | null>(null);
   const [firstDropSlot, setFirstDropSlot] = useState<number | null>(null);
 
+  // Vimeo player state
+  const [player, setPlayer] = useState<any>(null);
+  const [isMuted, setIsMuted] = useState(true);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
   const generateTargetSequence = useCallback(() => {
-    const shuffled = [...CARD_IMAGES].sort(() => Math.random() - 0.5);
+    const shuffled = [...IMAGE_SRCS].sort(() => Math.random() - 0.5);
     return shuffled.slice(0, sequenceLength);
   }, [sequenceLength]);
 
   const startMemorizePhase = () => {
     const seq = generateTargetSequence();
     setTargetSequence(seq);
-    setCurrentMemorizeIndex(0);
+    setCurrentMemorizeIndex(1);
     setPhase('memorize');
     toast({ title: 'Запоминание последовательности', description: `Длина: ${sequenceLength}. Запоминайте порядок` });
   };
 
-  // Run memorize presentation one-by-one
   useEffect(() => {
     if (phase !== 'memorize') return;
-    if (currentMemorizeIndex >= sequenceLength) {
-      // move to distractor
-      setPhase('distract');
-      setRemainingDistractMs(DISTRACTOR_MS);
-      return;
+    if (currentMemorizeIndex <= sequenceLength) {
+      const t = setTimeout(() => {
+        setCurrentMemorizeIndex(i => i + 1);
+      }, DISPLAY_PER_CARD_MS);
+      return () => clearTimeout(t);
+    } else {
+      const t = setTimeout(() => {
+        setPhase('distract');
+        setRemainingDistractMs(DISTRACTOR_MS);
+      }, DISPLAY_PER_CARD_MS);
+      return () => clearTimeout(t);
     }
-    const t = setTimeout(() => {
-      setCurrentMemorizeIndex(i => i + 1);
-    }, DISPLAY_PER_CARD_MS);
-    return () => clearTimeout(t);
   }, [phase, currentMemorizeIndex, sequenceLength]);
 
   const showDevControls = import.meta.env.VITE_SHOW_DEV_CONTROLS === 'true' || devMode;
 
-  // Distractor countdown
   useEffect(() => {
     if (phase !== 'distract') return;
     const started = Date.now();
@@ -87,7 +82,6 @@ export const MemoryTest = ({ onComplete, age, devMode = false }: MemoryTestProps
       setRemainingDistractMs(remain);
       if (remain <= 0) {
         clearInterval(i);
-        // Setup reconstruction
         const shuffled = [...targetSequence].sort(() => Math.random() - 0.5);
         setPoolCards(shuffled);
         setSlots(new Array(sequenceLength).fill(null));
@@ -99,8 +93,33 @@ export const MemoryTest = ({ onComplete, age, devMode = false }: MemoryTestProps
     return () => clearInterval(i);
   }, [phase, sequenceLength, targetSequence]);
 
+  useEffect(() => {
+    if (phase === 'distract') {
+      const script = document.createElement('script');
+      script.src = 'https://player.vimeo.com/api/player.js';
+      script.async = true;
+      document.body.appendChild(script);
+
+      script.onload = () => {
+        if (iframeRef.current) {
+          const vimeoPlayer = new (window as any).Vimeo.Player(iframeRef.current);
+          setPlayer(vimeoPlayer);
+        }
+      };
+
+      return () => {
+        document.body.removeChild(script);
+      };
+    }
+  }, [phase]);
+
+  useEffect(() => {
+    if (player) {
+      player.setVolume(isMuted ? 0 : 0.5);
+    }
+  }, [player, isMuted]);
+
   const skipDistractorNow = () => {
-    // Same transition as natural timeout
     const shuffled = [...targetSequence].sort(() => Math.random() - 0.5);
     setPoolCards(shuffled);
     setSlots(new Array(sequenceLength).fill(null));
@@ -110,18 +129,16 @@ export const MemoryTest = ({ onComplete, age, devMode = false }: MemoryTestProps
   };
 
   const calculateResults = () => {
-    const targetIds = targetSequence.map(c => c.id);
-    const placedIds = slots.map(id => id ?? -1);
-    const correctPositions = placedIds.reduce((acc, id, idx) => acc + (id === targetIds[idx] ? 1 : 0), 0);
-    const substitutionErrors = placedIds.filter(id => id !== -1 && !targetIds.includes(id)).length;
+    const placedIds = slots.map(src => src ?? '');
+    const correctPositions = placedIds.reduce((acc, src, idx) => acc + (src === targetSequence[idx] ? 1 : 0), 0);
+    const substitutionErrors = placedIds.filter(src => src !== '' && !targetSequence.includes(src)).length;
     const orderErrors = sequenceLength - correctPositions;
     const startPosition = firstDropSlot ?? -1;
     const reconstructionTimeMs = reconstructionStart ? Date.now() - reconstructionStart : 0;
-    // Store total time spent in milliseconds to keep units consistent across tests
     const timeSpent = reconstructionTimeMs;
-    const correctCards = placedIds.filter(id => targetIds.includes(id)).length;
+    const correctCards = placedIds.filter(src => targetSequence.includes(src)).length;
     const incorrectCards = sequenceLength - correctCards;
-    const accuracy = (correctPositions / sequenceLength) * 100;
+    const accuracy = sequenceLength > 0 ? (correctPositions / sequenceLength) * 100 : 0;
 
     const results: MemoryResult = {
       totalCards: sequenceLength,
@@ -138,43 +155,58 @@ export const MemoryTest = ({ onComplete, age, devMode = false }: MemoryTestProps
     onComplete(results);
   };
 
-  // Drag & Drop handlers
-  const onDragStart = (cardId: number) => setDraggingId(cardId);
-  const onDragEnd = () => setDraggingId(null);
+  const handleSkipTest = () => {
+    onComplete({
+      totalCards: 0,
+      correctCards: 0,
+      incorrectCards: 0,
+      timeSpent: 0,
+      accuracy: 0,
+      correctPositions: 0,
+      orderErrors: 0,
+      substitutionErrors: 0,
+      startPosition: -1,
+      reconstructionTime: 0,
+    });
+  };
+
+  const onDragStart = (src: string) => setDraggingSrc(src);
+  const onDragEnd = () => setDraggingSrc(null);
   const onDropToSlot = (slotIndex: number) => {
-    if (draggingId == null) return;
+    if (draggingSrc == null) return;
+    if (slots[slotIndex] !== null) return;
+
     setSlots(prev => {
       const next = [...prev];
-      next[slotIndex] = draggingId;
+      next[slotIndex] = draggingSrc;
       return next;
     });
-    setPoolCards(prev => prev.filter(c => c.id !== draggingId));
+    setPoolCards(prev => prev.filter(src => src !== draggingSrc));
     if (firstDropSlot === null) setFirstDropSlot(slotIndex);
-    setDraggingId(null);
+    setDraggingSrc(null);
   };
   const onRemoveFromSlot = (slotIndex: number) => {
     setSlots(prev => {
       const next = [...prev];
-      const id = next[slotIndex];
-      if (id != null) {
-        const card = CARD_IMAGES.find(c => c.id === id);
-        if (card) setPoolCards(prevPool => [...prevPool, card]);
+      const src = next[slotIndex];
+      if (src != null) {
+        setPoolCards(prevPool => [...prevPool, src]);
       }
       next[slotIndex] = null;
       return next;
     });
   };
 
-  const renderCard = (card: typeof CARD_IMAGES[0]) => {
+  const renderCard = (src: string) => {
     return (
       <div
-        key={card.id}
+        key={src}
         draggable
-        onDragStart={() => onDragStart(card.id)}
+        onDragStart={() => onDragStart(src)}
         onDragEnd={onDragEnd}
-        className={`w-20 h-20 ${card.color} rounded-lg flex items-center justify-center cursor-grab border-2 transition-all hover:border-primary/50`}
+        className="w-20 h-20 rounded-lg cursor-grab border-2 transition-all hover:border-primary/50 overflow-hidden"
       >
-        <div className="text-white font-bold text-xs text-center">{card.shape}</div>
+        <img src={src} alt="card" className="w-full h-full object-cover" />
       </div>
     );
   };
@@ -193,15 +225,20 @@ export const MemoryTest = ({ onComplete, age, devMode = false }: MemoryTestProps
             <div className="space-y-4">
               <h3 className="font-semibold">Инструкция:</h3>
               <ul className="list-disc list-inside space-y-2 text-sm">
-                <li>На экране по очереди появятся {sequenceLength} карточек (по 1.5 сек каждая). Запоминайте порядок.</li>
+                <li>На экране по очереди появятся {sequenceLength} картинок (по 1.5 сек каждая). Запоминайте порядок.</li>
                 <li>Затем будет 2-минутный отвлекающий этап.</li>
-                <li>После этого восстановите порядок, перетаскивая карточки в пустые ячейки сверху.</li>
+                <li>После этого восстановите порядок, перетаскивая картинки в пустые ячейки сверху.</li>
               </ul>
             </div>
-            <div className="text-center">
+            <div className="text-center space-x-2">
               <Button onClick={startMemorizePhase} size="lg">
                 Начать тест
               </Button>
+              {devMode && (
+                <Button onClick={handleSkipTest} size="lg" variant="outline">
+                  Пропустить тест
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -212,20 +249,26 @@ export const MemoryTest = ({ onComplete, age, devMode = false }: MemoryTestProps
   if (phase === 'memorize') {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-primary/5 to-accent/5 p-4">
-        <Card className="w-full max-w-md">
+        <Card className="w-full max-w-6xl">
           <CardHeader className="text-center">
             <CardTitle>Запомните последовательность</CardTitle>
             <CardDescription>
-              {currentMemorizeIndex}/{sequenceLength}
+              Карточка {Math.min(currentMemorizeIndex, sequenceLength)} из {sequenceLength}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-center h-40">
-              {targetSequence[currentMemorizeIndex] && (
-                <div className={`w-24 h-24 ${targetSequence[currentMemorizeIndex].color} rounded-lg flex items-center justify-center`}>
-                  <div className="text-white font-bold text-sm">{targetSequence[currentMemorizeIndex].shape}</div>
-                </div>
-              )}
+            <div className="grid grid-flow-col auto-cols-fr gap-2 py-4">
+              {Array.from({ length: sequenceLength }).map((_, index) => {
+                const cardSrc = targetSequence[index];
+                const isVisible = index < currentMemorizeIndex;
+                return (
+                  <div key={index} className="aspect-square rounded-lg border-2 border-dashed border-muted-foreground/40 flex items-center justify-center overflow-hidden">
+                    {isVisible && cardSrc && (
+                      <img src={cardSrc} alt="card" className="w-full h-full object-cover" />
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
@@ -236,6 +279,7 @@ export const MemoryTest = ({ onComplete, age, devMode = false }: MemoryTestProps
   if (phase === 'distract') {
     const mm = String(Math.floor(remainingDistractMs / 60000)).padStart(2, '0');
     const ss = String(Math.floor((remainingDistractMs % 60000) / 1000)).padStart(2, '0');
+    const vimeoSrc = `https://player.vimeo.com/video/1110248215?autoplay=1&loop=1&playsinline=1&dnt=1&controls=0&byline=0&title=0`;
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-accent/5 p-4">
         <Card className="w-full max-w-2xl">
@@ -244,16 +288,24 @@ export const MemoryTest = ({ onComplete, age, devMode = false }: MemoryTestProps
             <CardDescription>Осталось: {mm}:{ss}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="aspect-video rounded-lg overflow-hidden bg-black">
+            <div className="relative aspect-video rounded-lg overflow-hidden bg-black">
               <iframe
-                src="https://player.vimeo.com/video/1110248215?autoplay=1&loop=1&autopause=0&muted=1"
+                ref={iframeRef}
+                src={vimeoSrc}
                 width="100%"
                 height="100%"
                 frameBorder="0"
                 allow="autoplay; fullscreen; picture-in-picture"
-                allowFullScreen
                 title="Vimeo video player"
               ></iframe>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsMuted(prev => !prev)}
+                className="absolute bottom-2 right-2 rounded-full bg-black text-white hover:bg-gray-800"
+              >
+                {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+              </Button>
             </div>
             {showDevControls && (
               <div className="mt-4 flex justify-center">
@@ -271,33 +323,32 @@ export const MemoryTest = ({ onComplete, age, devMode = false }: MemoryTestProps
   if (phase === 'reconstruct') {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-primary/5 to-accent/5 p-4">
-        <div className="w-full max-w-2xl mb-4">
+        <div className="w-full max-w-6xl mb-4">
           <div className="flex justify-between items-center mb-2">
             <span className="text-sm">Заполнено: {slots.filter(s => s != null).length}/{sequenceLength}</span>
           </div>
-          <Progress value={(slots.filter(s => s != null).length / sequenceLength) * 100} className="h-2" />
         </div>
 
-        <Card className="w-full max-w-2xl">
+        <Card className="w-full max-w-6xl">
           <CardHeader className="text-center">
             <CardTitle>Восстановите порядок</CardTitle>
             <CardDescription>Перетащите карточки снизу в ячейки сверху</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-5 gap-2 justify-items-center mb-6">
-              {slots.map((id, idx) => (
+            <div className="grid grid-flow-col auto-cols-fr gap-2 mb-6">
+              {slots.map((src, idx) => (
                 <div
                   key={idx}
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={() => onDropToSlot(idx)}
-                  className={`w-20 h-20 rounded-lg border-2 flex items-center justify-center ${id ? 'border-primary' : 'border-dashed border-muted-foreground/40'}`}
+                  className={`aspect-square rounded-lg border-2 flex items-center justify-center ${src ? 'border-transparent' : 'border-dashed border-muted-foreground/40'} overflow-hidden`}
                 >
-                  {id ? (
+                  {src ? (
                     <div
-                      className={`w-18 h-18 ${CARD_IMAGES.find(c => c.id === id)?.color} rounded-lg flex items-center justify-center cursor-pointer`}
+                      className="w-full h-full cursor-pointer"
                       onClick={() => onRemoveFromSlot(idx)}
                     >
-                      <div className="text-white font-bold text-xs">{CARD_IMAGES.find(c => c.id === id)?.shape}</div>
+                      <img src={src} alt="card" className="w-full h-full object-cover" />
                     </div>
                   ) : (
                     <span className="text-xs text-muted-foreground">{idx + 1}</span>
@@ -305,8 +356,8 @@ export const MemoryTest = ({ onComplete, age, devMode = false }: MemoryTestProps
                 </div>
               ))}
             </div>
-            <div className="grid grid-cols-5 gap-2 justify-items-center">
-              {poolCards.map(card => renderCard(card))}
+            <div className="flex flex-wrap justify-center gap-2">
+              {poolCards.map(src => renderCard(src))}
             </div>
             <div className="mt-6 text-center">
               <Button 

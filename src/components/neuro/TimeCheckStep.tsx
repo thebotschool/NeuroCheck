@@ -5,11 +5,10 @@ import { Clock, CheckCircle2, ArrowLeft } from 'lucide-react';
 
 interface TimeCheckStepProps {
   onSuccess: () => void;
-  progress?: number;
   onBack?: () => void;
 }
 
-export const TimeCheckStep = ({ onSuccess, progress, onBack }: TimeCheckStepProps) => {
+export const TimeCheckStep = ({ onSuccess, onBack }: TimeCheckStepProps) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isTimeValid, setIsTimeValid] = useState(false);
   const requireWindow = import.meta.env.VITE_REQUIRE_TIME_WINDOW !== 'true';
@@ -70,11 +69,6 @@ export const TimeCheckStep = ({ onSuccess, progress, onBack }: TimeCheckStepProp
           >
             <ArrowLeft className="h-6 w-6" />
           </Button>
-          <div className="flex-1">
-            <div className="h-3 rounded-full bg-gray-200 overflow-hidden" aria-hidden="true">
-              <div className="h-3 rounded-full bg-black" style={{ width: `${Math.round((progress ?? 0.2) * 100)}%`, transition: 'width 600ms cubic-bezier(.2,.9,.2,1)' }} />
-            </div>
-          </div>
         </div>
         <Card className="w-full max-w-md mx-auto">
           <CardHeader className="text-center">

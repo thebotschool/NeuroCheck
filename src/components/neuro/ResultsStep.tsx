@@ -1,27 +1,26 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CPTResult, GoNoGoResult, MemoryResult, UserData } from '@/types/test';
+import { TCPResult, GoNoGoResult, MemoryResult, Test } from '@/types/test';
 import { Download } from 'lucide-react';
-import { buildSummaryKey, scoreCPT, scoreGoNoGo, scoreMemory } from '@/lib/scoring';
+import { buildSummaryKey, scoreTCP, scoreGoNoGo, scoreMemory, ageGroupReverseMapping, ageGroupNumberToString } from '@/lib/scoring';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { saveTestResults } from '@/lib/testResultsSaver';
 import { loadDetailedReport, generateFallbackReport } from '@/lib/reportLoader';
 import { toast } from '@/hooks/use-toast';
 import { generatePdf } from '@/lib/pdfGenerator';
 
 interface ResultsStepProps {
-  userData: UserData;
-  cptResults: CPTResult;
+  test: Test;
+  tcpResults: TCPResult;
   gonogoResults: GoNoGoResult;
   memoryResults: MemoryResult;
   devMode?: boolean;
 }
 
 export const ResultsStep = ({ 
-  userData, 
-  cptResults, 
+  test,
+  tcpResults, 
   gonogoResults, 
   memoryResults,
   devMode = false
@@ -29,73 +28,38 @@ export const ResultsStep = ({
   const [resultSummary, setResultSummary] = useState<string>('');
   const [detailedReport, setDetailedReport] = useState<string>('');
   const [reportLoading, setReportLoading] = useState(true);
-  const [resultsSaved, setResultsSaved] = useState(false);
-  const [saveResultsLoading, setSaveResultsLoading] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
-
-  const ageGroupReverseMapping: Record<number, number> = {
-    1: 7,  // 7-10
-    2: 11, // 11-14
-    3: 15, // 15-18
-    4: 19, // 19-22
-    5: 23, // 23+
-  };
-
-  const ageGroupNumberToString: Record<number, string> = {
-    1: '7-10',
-    2: '11-14',
-    3: '15-18',
-    4: '19-22',
-    5: '23+',
-  };
 
   const handleDownloadPdf = () => {
     if (reportRef.current) {
-      generatePdf(reportRef.current, `neuro-report-${userData.userId}`);
+      generatePdf(reportRef.current, `neuro-report-${test.id}`);
     }
   };
 
-  const handleSaveResults = useCallback(async () => {
+  const handleResetAndStartNewTest = async () => {
     try {
-      setSaveResultsLoading(true);
-      const { success, summaryKey, error } = await saveTestResults({
-        userData,
-        cptResults,
-        gonogoResults,
-        memoryResults
-      });
-
-      if (success && summaryKey) {
-        setResultsSaved(true);
-        toast({
-          title: 'Результаты сохранены',
-          description: `Код результата: ${summaryKey}`,
-        });
-      } else {
-        toast({
-          title: 'Ошибка сохранения',
-          description: error || 'Не удалось сохранить результаты',
-          variant: 'destructive',
-        });
+      const res = await fetch('/api/reset-dev-token', { method: 'POST' });
+      if (!res.ok) {
+        throw new Error('Failed to reset dev token');
       }
+      // Redirect to start a new test
+      window.location.href = `/test?token=${test.token}&dev=1`;
     } catch (error) {
-      console.error('Error saving results:', error);
+      console.error(error);
       toast({
         title: 'Ошибка',
-        description: 'Произошла неожиданная ошибка при сохранении',
+        description: 'Не удалось сбросить сессию для разработки.',
         variant: 'destructive',
       });
-    } finally {
-      setSaveResultsLoading(false);
     }
-  }, [userData, cptResults, gonogoResults, memoryResults]);
+  };
 
   useEffect(() => {
     const calculateScoresAndLoadReport = async () => {
-      const ageNum = userData.age || 3;
+      const ageNum = test.age || 3;
       const representativeAge = ageGroupReverseMapping[ageNum] || 15;
 
-      const x = scoreCPT(cptResults, representativeAge);
+      const x = scoreTCP(tcpResults, representativeAge);
       const y = scoreGoNoGo(gonogoResults, representativeAge);
       const z = scoreMemory(memoryResults, representativeAge);
       const summary = buildSummaryKey(x, y, z);
@@ -129,13 +93,7 @@ export const ResultsStep = ({
     };
 
     calculateScoresAndLoadReport();
-  }, [cptResults, gonogoResults, memoryResults, userData.age]);
-
-  useEffect(() => {
-    if (resultSummary && !resultsSaved) {
-      handleSaveResults();
-    }
-  }, [resultSummary, resultsSaved, handleSaveResults]);
+  }, [tcpResults, gonogoResults, memoryResults, test.age]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 to-accent/5 p-4">
@@ -145,13 +103,20 @@ export const ResultsStep = ({
             <div>
               <CardTitle className="text-2xl">Результаты тестирования</CardTitle>
               <CardDescription>
-                Участник: {userData.childName || 'Не указано'} | Возраст: {ageGroupNumberToString[userData.age] || 'Не указано'} лет
+                Возраст: {ageGroupNumberToString[test.age] || 'Не указано'} лет
               </CardDescription>
             </div>
-            <Button onClick={handleDownloadPdf} variant="outline">
-              <Download className="mr-2 h-4 w-4" />
-              Скачать PDF
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button onClick={handleDownloadPdf} variant="outline">
+                <Download className="mr-2 h-4 w-4" />
+                Скачать PDF
+              </Button>
+              {test.token === 'dev-token-123' && (
+                <Button onClick={handleResetAndStartNewTest}>
+                  Начать новый тест
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent ref={reportRef}>
             {reportLoading ? (
@@ -171,9 +136,9 @@ export const ResultsStep = ({
                     <strong>Result Summary:</strong> {resultSummary}
                   </div>
                   <div>
-                    <strong>CPT Results:</strong>
+                    <strong>TCP Results:</strong>
                     <pre className="text-xs bg-gray-100 p-2 rounded mt-1">
-                      {JSON.stringify(cptResults, null, 2)}
+                      {JSON.stringify(tcpResults, null, 2)}
                     </pre>
                   </div>
                   <div>

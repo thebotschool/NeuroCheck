@@ -64,6 +64,7 @@ export function getAllPossibleSummaryKeys(): string[] {
 export function generateFallbackReport(summaryKey: string, age: number): string {
   const ageGroup = getAgeGroup(age);
   const [x, y, z] = summaryKey.match(/X(\d)-Y(\d)-Z(\d)/)?.slice(1) || ['1', '1', '1'];
+  const memoryLevel = 5 - parseInt(z);
   
   return `# Краткий отчет (${summaryKey})
 
@@ -71,13 +72,13 @@ export function generateFallbackReport(summaryKey: string, age: number): string 
 
 **Код результата:** ${summaryKey}
 
-### Тест внимания (CPT): Уровень ${x}/4
+### Тест внимания (TCP): Уровень ${x}/4
 ${getScoreDescription('attention', parseInt(x))}
 
 ### Тест самоконтроля (Go/No-Go): Уровень ${y}/4  
 ${getScoreDescription('control', parseInt(y))}
 
-### Тест памяти: Уровень ${z}/4
+### Тест памяти: Уровень ${memoryLevel}/4
 ${getScoreDescription('memory', parseInt(z))}
 
 ---
@@ -101,10 +102,10 @@ function getScoreDescription(testType: 'attention' | 'control' | 'memory', score
       4: 'Отличный самоконтроль и способность к торможению'
     },
     memory: {
-      1: 'Требуется поддержка в развитии зрительной памяти',
-      2: 'Зрительная память развита ниже среднего уровня',
-      3: 'Хороший уровень зрительной рабочей памяти',
-      4: 'Отличная зрительная память и способность к запоминанию'
+      1: 'Отличная зрительная память и способность к запоминанию',
+      2: 'Хороший уровень зрительной рабочей памяти',
+      3: 'Зрительная память развита ниже среднего уровня',
+      4: 'Требуется поддержка в развитии зрительной памяти'
     }
   };
   

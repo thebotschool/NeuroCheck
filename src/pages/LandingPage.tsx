@@ -17,6 +17,7 @@ export default function LandingPage() {
           Помогаем понять, как работают внимание, самоконтроль и память — за 15 минут, без сложного оборудования и без присутствия специалистов.
         </p>
         <Button className="text-lg px-6 py-4" onClick={() => navigate('/payment')}>Начать тест</Button>
+        
       </section>
 
       {/* Для кого */}
@@ -73,6 +74,8 @@ export default function LandingPage() {
         </ul>
       </section>
 
+      
+
       {/* Почему это важно */}
       <section className="max-w-4xl mx-auto space-y-6">
         <h2 className="text-2xl font-semibold text-center">Почему это важно</h2>
@@ -87,12 +90,13 @@ export default function LandingPage() {
       {/* Final CTA */}
       <section className="text-center">
         <Button className="text-lg px-8 py-4" onClick={() => navigate('/payment')}>Пройти диагностику</Button>
+        
       </section>
 
       {/* Footer */}
       <footer className="text-center text-gray-500 text-sm mt-16">
         <p>© 2025 NeuroCheck. Все права защищены.</p>
-        <p>support@neurocheck.app</p>
+        
       </footer>
     </div>
   );

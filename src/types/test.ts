@@ -1,4 +1,16 @@
-export interface CPTResult {
+import { type Tables } from "./supabase";
+
+// The raw database row type
+export type TestRow = Tables<'tests'>;
+
+export interface UserData {
+  name: string;
+  age: number;
+  email: string;
+}
+
+// --- Result Types ---
+export interface TCPResult {
   totalStimuli: number;
   targetsPresented: number;
   hits: number;
@@ -8,34 +20,25 @@ export interface CPTResult {
   reactionTimes: number[];
   accuracy: number;
   averageReactionTime: number;
-  // Added in Stage 0: standard deviation of reaction times (hits only)
-  // Optional for backward compatibility; will be required by computation later
   sdReactionTime?: number;
 }
 
-// Updated structure to support per-hand metrics while keeping legacy fields optional
 export interface GoNoGoHandMetrics {
   correctGo: number;
   missedGo: number;
   falseAlarms: number;
   reactionTimes: number[];
   averageReactionTime: number;
-  // Optional during migration; will compute later
   sdReactionTime?: number;
 }
 
 export interface GoNoGoResult {
-  // Aggregates
   totalStimuli: number;
   goStimuli: number;
   noGoStimuli: number;
   accuracy: number;
-
-  // New per-hand metrics
   rightHand?: GoNoGoHandMetrics;
   leftHand?: GoNoGoHandMetrics;
-
-  // Legacy flat fields (optional for backward compatibility)
   correctGo?: number;
   missedGo?: number;
   falseAlarms?: number;
@@ -50,7 +53,6 @@ export interface MemoryResult {
   incorrectCards: number;
   timeSpent: number;
   accuracy: number;
-  // Added metrics for ordering analysis (optional for migration)
   correctPositions?: number;
   orderErrors?: number;
   substitutionErrors?: number;
@@ -58,35 +60,26 @@ export interface MemoryResult {
   reconstructionTime?: number;
 }
 
-export interface TestSession {
-  id: string;
-  userId: string;
-  currentStep: number;
-  cptResults?: CPTResult;
-  gonogoResults?: GoNoGoResult;
-  memoryResults?: MemoryResult;
-  handUsed: 'left' | 'right';
-  startedAt: Date;
-  completedAt?: Date;
-  isCompleted: boolean;
-}
+// --- App-level Test Type ---
+// This is the type we use in the application code.
+// It's based on the database row but adds app-specific fields and converts types.
+export interface Test extends Omit<TestRow, 'tcp_results' | 'gonogo_results' | 'memory_results'> {
+  // App-specific fields that are not in the database
+  name?: string; 
+  email?: string;
+  handUsed?: 'left' | 'right';
 
-export interface UserData {
-  id: string;
-  userId: string;
-  childName?: string;
-  age: number;
-  email: string;
-  consentAgreed: boolean;
-  createdAt: Date;
+  // Overwrite raw DB types with more specific app-level types
+  tcp_results?: TCPResult;
+  gonogo_results?: GoNoGoResult;
+  memory_results?: MemoryResult;
 }
 
 export type TestStep = 
-  | 'promo-check' 
   | 'name-step'
   | 'user-data' 
   | 'time-check' 
-  | 'cpt-test' 
+  | 'tcp-test' 
   | 'hand-switch' 
   | 'gonogo-test' 
   | 'video-rest' 

@@ -1,6 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 export const PaymentPage = () => {
+  const [email, setEmail] = useState('');
+
   useEffect(() => {
     const yookassaStylesheet = document.createElement('link');
     yookassaStylesheet.rel = 'stylesheet';
@@ -17,6 +19,8 @@ export const PaymentPage = () => {
       document.body.removeChild(yookassaScript);
     };
   }, []);
+
+  const successURL = `https://${import.meta.env.VITE_PUBLIC_DOMAIN}/success`;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -41,9 +45,11 @@ export const PaymentPage = () => {
           <input value="" type="hidden" name="ym_merchant_receipt" />
           <div className="ym-customer-info">
             <div className="ym-block-title">О покупателе</div>
-            <input name="cps_email" className="ym-input" placeholder="Email" type="text" value="" />
+            <input name="cps_email" className="ym-input" placeholder="Email" type="text" value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
-          <div className="ym-hidden-inputs"></div>
+          <div className="ym-hidden-inputs">
+            <input type="hidden" name="metadata[email]" value={email} />
+          </div>
           <input name="customerNumber" type="hidden" value="Покупка исследования учебных функций" />
           <div className="ym-payment-btn-block ym-before-line ym-align-space-between">
             <div className="ym-input-icon-rub ym-display-none">
@@ -55,7 +61,7 @@ export const PaymentPage = () => {
             <img src="https://yookassa.ru/integration/simplepay/img/iokassa-gray.svg?v=1.26.0" className="ym-logo" width="114" height="27" alt="ЮKassa" />
           </div>
           <input name="shopId" type="hidden" value="1146276" />
-          <input name="successURL" type="hidden" value="http://localhost:5173/test" />
+          <input name="successURL" type="hidden" value={successURL} />
         </form>
       </div>
     </div>

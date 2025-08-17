@@ -1,0 +1,3 @@
+ALTER TABLE public.tests
+ADD COLUMN email TEXT,
+ADD COLUMN used BOOLEAN NOT NULL DEFAULT false;
