@@ -29,7 +29,7 @@ const NeuroCheck = () => {
   const [testStarted, setTestStarted] = useState(false);
   const [timeBypassed, setTimeBypassed] = useState(false);
 
-  const { test, loading, updateTestWithUserData, saveTCPResults, saveGoNoGoResults, saveMemoryResults, completeTest, getTestByToken, findOrCreateTestForDev } = useTestSession();
+  const { test, loading, updateTestWithUserData, saveTCPResults, saveGoNoGoResults, saveMemoryResults, completeTest, getTestByToken } = useTestSession();
 
   const handleBackToStart = useCallback(() => {
     setTestStarted(false);
@@ -38,37 +38,24 @@ const NeuroCheck = () => {
   useEffect(() => {
     const token = searchParams.get('token');
     setDevMode(searchParams.has('dev'));
-    const devBypassToken = import.meta.env.VITE_DEV_BYPASS_TOKEN ?? 'dev-token-123';
 
     if (!token) {
       setTokenState('invalid');
       return;
     }
 
-    if (token === devBypassToken) {
-      // For the dev token, we ensure it exists and is ready for use.
-      findOrCreateTestForDev(token).then(testSession => {
-        if (testSession) {
+    fetch(`/api/verify-token?token=${token}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.ok) {
           setTokenState('valid');
+          getTestByToken(token);
         } else {
           setTokenState('invalid');
         }
-      });
-    } else {
-      // Original logic for real tokens via backend API
-      fetch(`/api/verify-token?token=${token}`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.ok) {
-            setTokenState('valid');
-            getTestByToken(token);
-          } else {
-            setTokenState('invalid');
-          }
-        })
-        .catch(() => setTokenState('invalid'));
-    }
-  }, [searchParams, getTestByToken, findOrCreateTestForDev]);
+      })
+      .catch(() => setTokenState('invalid'));
+  }, [searchParams, getTestByToken]);
 
   const handleStartTest = async () => {
     const token = searchParams.get('token');
@@ -268,13 +255,13 @@ const NeuroCheck = () => {
   let content: JSX.Element;
   switch (currentStep) {
     case 'user-data':
-      if (!test?.email) {
+      if (!test) {
         content = <LoadingScreen />;
       } else {
         content = (
           <UserDataStep
             onSuccess={handleUserDataSuccess}
-            email={test.email}
+            email={test.email ?? ''} // Pass an empty string if email is null
             onBack={handleBackToStart}
           />
         );

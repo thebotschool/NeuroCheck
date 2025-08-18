@@ -15,14 +15,6 @@ export default async function handler(req: Request): Promise<Response> {
     const markAsCompleted = !!body?.markAsCompleted;
     if (!token) return json({ error: 'token_required' }, 400);
 
-    // DEV bypass (в Edge тоже безопасно: код выполняется на сервере)
-    const DEV = process.env.NODE_ENV !== 'production';
-    const BYPASS_ENABLED = process.env.VITE_DEV_BYPASS_ENABLED === 'true';
-    const BYPASS_TOKEN = process.env.VITE_DEV_BYPASS_TOKEN || 'dev-token-123';
-    if (DEV && BYPASS_ENABLED && token === BYPASS_TOKEN) {
-      return json({ consumed: true, devBypass: true, testId: 'dev-bypass' });
-    }
-
     const SUPABASE_URL = process.env.SUPABASE_URL;
     const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!SUPABASE_URL || !SERVICE_KEY) {

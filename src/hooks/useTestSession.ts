@@ -143,50 +143,6 @@ export const useTestSession = () => {
     }
   }, []);
 
-  const findOrCreateTestForDev = useCallback(async (token: string) => {
-    setLoading(true);
-    try {
-      const { data: existingTest, error: findError } = await supabase
-        .from('tests')
-        .select('*')
-        .eq('token', token)
-        .maybeSingle();
-
-      if (findError) throw findError;
-
-      if (existingTest) {
-        const testData = fromRow(existingTest);
-        setTest(testData);
-        return testData;
-      } else {
-        const expires_at = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-        const { data: newTest, error: createError } = await supabase
-          .from('tests')
-          .insert({
-            token,
-            expires_at,
-            is_completed: false,
-            payment_id: 'dev-payment-123',
-            email: 'dev@example.com', // Add a default email for the dev token
-          })
-          .select()
-          .single();
-        
-        if (createError) throw createError;
-
-        const testData = fromRow(newTest);
-        setTest(testData);
-        return testData;
-      }
-    } catch (error) {
-      console.error('Error finding or creating dev test:', error);
-      toast({ title: 'Ошибка', description: 'Не удалось создать сессию для разработки', variant: 'destructive' });
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   return {
     test,
     loading,
@@ -197,7 +153,6 @@ export const useTestSession = () => {
     saveMemoryResults,
     completeTest,
     getTestByToken,
-    findOrCreateTestForDev, // Expose the new function
     setTest, // Exposed for dev bypass
   };
 };
