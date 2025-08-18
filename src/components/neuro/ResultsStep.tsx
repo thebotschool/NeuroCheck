@@ -38,10 +38,21 @@ export const ResultsStep = ({
 
   const handleResetAndStartNewTest = async () => {
     try {
-      const res = await fetch('/api/reset-dev-token', { method: 'POST' });
+      const res = await fetch('/api/reset-dev-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: 'dev-token-123' })
+      });
+
       if (!res.ok) {
-        throw new Error('Failed to reset dev token');
+        const text = await res.text().catch(() => '(no body)');
+        console.error('reset-dev-token failed', res.status, text);
+        throw new Error(`Failed to reset dev token: ${res.status} ${text}`);
       }
+
+      const data = await res.json();
+      console.log('reset-dev-token ok:', data);
+      
       // Redirect to start a new test
       window.location.href = `/test?token=${test.token}&dev=1`;
     } catch (error) {
