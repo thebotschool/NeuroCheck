@@ -1,16 +1,4 @@
 // api/reset-dev-token.ts
-// EDGE + Supabase REST. Сбрасывает dev-токен, чтобы можно было начать тест заново.
-//
-// Доступ:
-// - development/preview: если VITE_DEV_BYPASS_ENABLED === 'true'
-// - production: только если token === DEV_BYPASS_TOKEN (по умолчанию 'dev-token-123')
-//
-// Требуемые env на сервере (Vercel → Project Env):
-// SUPABASE_URL
-// SUPABASE_SERVICE_ROLE_KEY
-// (опц.) VITE_DEV_BYPASS_ENABLED='true'
-// (опц.) VITE_DEV_BYPASS_TOKEN='dev-token-123'
-
 export const config = { runtime: 'edge' };
 
 const json = (d: any, s = 200) =>
@@ -20,7 +8,7 @@ export default async function handler(req: Request): Promise<Response> {
   try {
     if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
 
-    // Читаем тело (может быть пустым)
+    // Читаем тело, чтобы понять, какой токен просили
     let body: any = null;
     try { body = await req.json(); } catch {}
 
@@ -31,12 +19,20 @@ export default async function handler(req: Request): Promise<Response> {
     const isNonProd = env !== 'production';
     const BYPASS_ENABLED = process.env.VITE_DEV_BYPASS_ENABLED === 'true';
 
-    // Разрешение:
-    // - в dev/preview при включённом флаге
-    // - в prod ТОЛЬКО если трогаем dev-токен
-    const allowed = (isNonProd && BYPASS_ENABLED) || (BYPASS_ENABLED && requestedToken === DEV_BYPASS_TOKEN);
+    const allowed =
+      (isNonProd && BYPASS_ENABLED) ||
+      (BYPASS_ENABLED && requestedToken === DEV_BYPASS_TOKEN);
+
     if (!allowed) {
-      return json({ error: 'forbidden', env, tokenAllowedInProd: DEV_BYPASS_TOKEN }, 403);
+      return json({
+        error: 'forbidden',
+        reason: 'not_allowed_by_env_guard',
+        details: {
+          env, isNonProd, BYPASS_ENABLED,
+          requestedToken,
+          DEV_BYPASS_TOKEN
+        }
+      }, 403);
     }
 
     const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -49,67 +45,57 @@ export default async function handler(req: Request): Promise<Response> {
       }, 500);
     }
 
-    // 1) UPSERT записи (если нет) — благодаря unique (token) обновит существующую
-    {
-      const resp = await fetch(`${SUPABASE_URL}/rest/v1/tests`, {
-        method: 'POST',
-        headers: {
-          apikey: SERVICE_KEY,
-          Authorization: `Bearer ${SERVICE_KEY}`,
-          'Content-Type': 'application/json',
-          // merge-duplicates использует unique индекс (token) как условие UPSERT
-          Prefer: 'resolution=merge-duplicates,return=representation'
-        },
-        body: JSON.stringify({
-          token: requestedToken,
-          payment_id: 'dev-payment',
-          age: 10,
-          email: 'dev@example.com',
-          used: false,
-          is_completed: false,
-          current_step: 1,
-          started_at: new Date().toISOString(),
-          completed_at: null,
-          expires_at: new Date(Date.now() + 90 * 24 * 3600 * 1000).toISOString(), // +90 дней
-          cpt_results: null,
-          gonogo_results: null,
-          memory_results: null
-        })
-      });
-
-      if (!resp.ok) {
-        const txt = await resp.text().catch(() => '');
-        return json({ ok: false, step: 'upsert', status: resp.status, body: txt }, 500);
-      }
+    // 1) UPSERT
+    const upsert = await fetch(`${SUPABASE_URL}/rest/v1/tests`, {
+      method: 'POST',
+      headers: {
+        apikey: SERVICE_KEY,
+        Authorization: `Bearer ${SERVICE_KEY}`,
+        'Content-Type': 'application/json',
+        Prefer: 'resolution=merge-duplicates,return=representation'
+      },
+      body: JSON.stringify({
+        token: requestedToken,
+        payment_id: 'dev-payment',
+        age: 10,
+        email: 'dev@example.com',
+        used: false,
+        is_completed: false,
+        current_step: 1,
+        started_at: new Date().toISOString(),
+        completed_at: null,
+        expires_at: new Date(Date.now() + 90*24*3600*1000).toISOString(),
+        cpt_results: null, gonogo_results: null, memory_results: null
+      })
+    });
+    if (!upsert.ok) {
+      const txt = await upsert.text().catch(() => '');
+      return json({ ok: false, step: 'upsert', status: upsert.status, body: txt }, 500);
     }
 
-    // 2) PATCH — принудительно сбрасываем поля на «стартовые»
-    {
-      const resp = await fetch(`${SUPABASE_URL}/rest/v1/tests?token=eq.${encodeURIComponent(requestedToken)}`, {
-        method: 'PATCH',
-        headers: {
-          apikey: SERVICE_KEY,
-          Authorization: `Bearer ${SERVICE_KEY}`,
-          'Content-Type': 'application/json',
-          Prefer: 'return=representation'
-        },
-        body: JSON.stringify({
-          used: false,
-          is_completed: false,
-          current_step: 1,
-          completed_at: null,
-          cpt_results: null,
-          gonogo_results: null,
-          memory_results: null,
-          // Можно продлевать «жизнь» токена:
-          expires_at: new Date(Date.now() + 90 * 24 * 3600 * 1000).toISOString()
-        })
-      });
-
-      if (!resp.ok) {
-        const txt = await resp.text().catch(() => '');
-        return json({ ok: false, step: 'patch', status: resp.status, body: txt }, 500);
-      }
+    // 2) PATCH reset
+    const patch = await fetch(`${SUPABASE_URL}/rest/v1/tests?token=eq.${encodeURIComponent(requestedToken)}`, {
+      method: 'PATCH',
+      headers: {
+        apikey: SERVICE_KEY,
+        Authorization: `Bearer ${SERVICE_KEY}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=representation'
+      },
+      body: JSON.stringify({
+        used: false,
+        is_completed: false,
+        current_step: 1,
+        completed_at: null,
+        cpt_results: null,
+        gonogo_results: null,
+        memory_results: null,
+        expires_at: new Date(Date.now() + 90*24*3600*1000).toISOString()
+      })
+    });
+    if (!patch.ok) {
+      const txt = await patch.text().catch(() => '');
+      return json({ ok: false, step: 'patch', status: patch.status, body: txt }, 500);
     }
 
     return json({ ok: true, token: requestedToken });
