@@ -59,7 +59,7 @@ const NeuroCheck = () => {
       fetch(`/api/verify-token?token=${token}`)
         .then((res) => res.json())
         .then((data) => {
-          if (data.valid) {
+          if (data.ok) {
             setTokenState('valid');
             getTestByToken(token);
           } else {
