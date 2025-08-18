@@ -46,10 +46,7 @@ export default async (req: VercelRequest, res: VercelResponse) => {
       return res.status(200).json({ consumed: false, reason: 'Token expired' });
     }
 
-    const updates: { used: boolean; updated_at: string; is_completed?: boolean } = {
-      used: true,
-      updated_at: now.toISOString(),
-    };
+    const updates: { used: boolean; is_completed?: boolean } = { used: true };
 
     if (markAsCompleted) {
       updates.is_completed = true;
