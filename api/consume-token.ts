@@ -1,13 +1,8 @@
-// api/consume-token.ts
-import { getAdminClient } from './_lib/supabaseServer';
+// api/consume-token.ts  (EDGE + REST)
+export const config = { runtime: 'edge' };
 
-function json(data: any, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status, headers: { 'content-type': 'application/json' }
-  });
-}
-
-export const config = { runtime: 'nodejs' };
+const json = (d: any, s = 200) =>
+  new Response(JSON.stringify(d), { status: s, headers: { 'content-type': 'application/json' } });
 
 export default async function handler(req: Request): Promise<Response> {
   try {
@@ -20,7 +15,7 @@ export default async function handler(req: Request): Promise<Response> {
     const markAsCompleted = !!body?.markAsCompleted;
     if (!token) return json({ error: 'token_required' }, 400);
 
-    // dev-bypass (не трогаем БД)
+    // DEV bypass (в Edge тоже безопасно: код выполняется на сервере)
     const DEV = process.env.NODE_ENV !== 'production';
     const BYPASS_ENABLED = process.env.VITE_DEV_BYPASS_ENABLED === 'true';
     const BYPASS_TOKEN = process.env.VITE_DEV_BYPASS_TOKEN || 'dev-token-123';
@@ -28,28 +23,55 @@ export default async function handler(req: Request): Promise<Response> {
       return json({ consumed: true, devBypass: true, testId: 'dev-bypass' });
     }
 
-    const supabase = getAdminClient();
+    const SUPABASE_URL = process.env.SUPABASE_URL;
+    const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!SUPABASE_URL || !SERVICE_KEY) {
+      return json({ error: 'server_misconfig', SUPABASE_URL: !!SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY: !!SERVICE_KEY }, 500);
+    }
 
-    const { data: test, error } = await supabase
-      .from('tests')
-      .select('used, expires_at, is_completed')
-      .eq('token', token)
-      .single();
+    // 1) SELECT tests by token
+    const sel = await fetch(`${SUPABASE_URL}/rest/v1/tests?token=eq.${encodeURIComponent(token)}&select=used,expires_at,is_completed,id`, {
+      headers: {
+        apikey: SERVICE_KEY,
+        Authorization: `Bearer ${SERVICE_KEY}`,
+        Prefer: 'return=representation',
+      },
+      // Edge: fetch доступен из коробки
+    });
 
-    if (error || !test) return json({ consumed: false, reason: 'not_found' });
-    if (test.used)       return json({ consumed: false, reason: 'already_used' });
-    if (test.expires_at && new Date(test.expires_at) < new Date())
-                         return json({ consumed: false, reason: 'expired' });
+    if (!sel.ok) {
+      return json({ consumed: false, reason: 'select_failed', status: sel.status }, 500);
+    }
+    const rows = await sel.json() as Array<{ used: boolean; expires_at: string | null; is_completed: boolean; id: string }>;
+    const row = rows[0];
+    if (!row) return json({ consumed: false, reason: 'not_found' });
 
-    const updates: { used: boolean; is_completed?: boolean } = { used: true };
+    if (row.used) return json({ consumed: false, reason: 'already_used' });
+    if (row.expires_at && new Date(row.expires_at) < new Date()) return json({ consumed: false, reason: 'expired' });
+
+    // 2) UPDATE used / is_completed
+    const updates: Record<string, any> = { used: true };
     if (markAsCompleted) updates.is_completed = true;
 
-    const { error: updErr } = await supabase.from('tests').update(updates).eq('token', token);
-    if (updErr) return json({ consumed: false, reason: 'update_failed' }, 500);
+    const upd = await fetch(`${SUPABASE_URL}/rest/v1/tests?token=eq.${encodeURIComponent(token)}`, {
+      method: 'PATCH',
+      headers: {
+        apikey: SERVICE_KEY,
+        Authorization: `Bearer ${SERVICE_KEY}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=representation',
+      },
+      body: JSON.stringify(updates),
+    });
+
+    if (!upd.ok) {
+      const txt = await upd.text().catch(() => '');
+      return json({ consumed: false, reason: 'update_failed', status: upd.status, body: txt }, 500);
+    }
 
     return json({ consumed: true });
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'unknown';
-    return json({ ok: false, error: `consume-token failed: ${msg}` }, 500);
+    return json({ ok: false, error: `consume-token(edge) failed: ${msg}` }, 500);
   }
 }
