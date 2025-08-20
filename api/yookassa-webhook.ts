@@ -31,8 +31,9 @@ export default async (req: VercelRequest, res: VercelResponse) => {
   const authHeader = req.headers.authorization;
   const yookassaUser = process.env.YOOKASSA_WEBHOOK_USER;
   const yookassaPassword = process.env.YOOKASSA_WEBHOOK_PASSWORD;
+  const basicAuthDisabled = process.env.WEBHOOK_BASIC_AUTH_DISABLED === 'true';
 
-  if (yookassaUser && yookassaPassword) {
+  if (!basicAuthDisabled && yookassaUser && yookassaPassword) {
     if (!authHeader) {
       return res.status(401).send('Authorization header missing');
     }
@@ -44,22 +45,57 @@ export default async (req: VercelRequest, res: VercelResponse) => {
 
   try {
     const rawBody = await readRawBody(req);
+    console.log('Webhook received:', { headers: req.headers, body: rawBody });
+    
     const payload = JSON.parse(rawBody);
 
     if (payload.event !== 'payment.succeeded') {
+      console.log(`Event ${payload.event} ignored`);
       return res.status(200).send('Event ignored');
     }
 
     const { object: payment } = payload;
     const paymentId = payment.id;
-    let email = payment.metadata?.email || payment.customer?.email;
+    
+    // Более надежное извлечение email из разных источников
+    let email = payment.metadata?.email || 
+                payment.customer?.email || 
+                payment.receipt?.customer?.email ||
+                payment.confirmation?.return_url?.match(/email=([^&]+)/)?.[1];
+
+    console.log('Payment data:', { 
+      paymentId, 
+      metadata: payment.metadata, 
+      customer: payment.customer,
+      email 
+    });
 
     if (!email) {
-      console.warn(`Email not found in metadata or customer info for payment ${paymentId}.`);
-      email = '';
+      console.error(`Email not found for payment ${paymentId}. Payment data:`, JSON.stringify(payment, null, 2));
+      return res.status(400).json({ 
+        ok: false, 
+        error: 'Email required for test access',
+        paymentId 
+      });
     }
 
     const supabase = getAdminClient();
+
+    // Проверяем, не обработан ли уже этот платеж
+    const { data: existingTest } = await supabase
+      .from('tests')
+      .select('id, token')
+      .eq('payment_id', paymentId)
+      .single();
+
+    if (existingTest) {
+      console.log(`Payment ${paymentId} already processed, test ID: ${existingTest.id}`);
+      return res.status(200).json({ 
+        ok: true, 
+        message: 'Payment already processed',
+        testId: existingTest.id 
+      });
+    }
 
     if (USE_UNIFIED_TABLE) {
       // Logic for a single 'orders' table (not implemented as per current schema)
@@ -78,7 +114,10 @@ export default async (req: VercelRequest, res: VercelResponse) => {
         updated_at: new Date(),
       }, { onConflict: 'payment_id' });
 
-      if (paymentError) throw paymentError;
+      if (paymentError) {
+        console.error('Payment upsert error:', paymentError);
+        throw paymentError;
+      }
     }
 
     const token = `${randomUUID()}-${Date.now()}`;
@@ -103,8 +142,15 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     const siteUrl = process.env.SITE_URL || 'http://localhost:5173';
     const accessUrl = `${siteUrl}/test?token=${token}`;
 
-    await sendAccessEmail(email, accessUrl);
+    try {
+      await sendAccessEmail(email, accessUrl);
+      console.log(`Access email sent to ${email} for test ${test.id}`);
+    } catch (emailError) {
+      console.error('Failed to send access email:', emailError);
+      // Не прерываем выполнение, так как токен уже создан
+    }
 
+    console.log(`Webhook processed successfully: payment ${paymentId}, test ${test.id}, email ${email}`);
     return res.status(200).json({ ok: true, testId: test.id, email });
 
   } catch (error) {

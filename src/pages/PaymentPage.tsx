@@ -49,6 +49,7 @@ export const PaymentPage = () => {
           </div>
           <div className="ym-hidden-inputs">
             <input type="hidden" name="metadata[email]" value={email} />
+            <input type="hidden" name="cps_email" value={email} />
           </div>
           <input name="customerNumber" type="hidden" value="Покупка исследования учебных функций" />
           <div className="ym-payment-btn-block ym-before-line ym-align-space-between">
