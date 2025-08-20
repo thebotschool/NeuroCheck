@@ -14,6 +14,18 @@ const readRawBody = (req: VercelRequest): Promise<string> =>
   });
 
 export default async (req: VercelRequest, res: VercelResponse) => {
+  console.log('WEBHOOK HIT', {
+    method: req.method,
+    url: req.url,
+    hasAuth: Boolean(req.headers.authorization),
+    contentType: req.headers['content-type'],
+  });
+
+  if (req.method === 'POST' && req.query?.echo === '1') {
+    // Примитивный эхо-ответ без чтения body
+    return res.status(200).json({ ok: true, msg: 'echo', headers: req.headers });
+  }
+
   // Временный health‑чекап
   if (req.method === 'GET') return res.status(200).send('OK: yookassa-webhook is live');
   
