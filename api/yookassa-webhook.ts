@@ -14,25 +14,15 @@ const readRawBody = (req: VercelRequest): Promise<string> =>
   });
 
 export default async (req: VercelRequest, res: VercelResponse) => {
-  console.log('WEBHOOK HIT', {
-    method: req.method,
-    url: req.url,
-    hasAuth: Boolean(req.headers.authorization),
-    contentType: req.headers['content-type'],
-  });
-
-  if (req.method === 'POST' && req.query?.echo === '1') {
-    // Примитивный эхо-ответ без чтения body
-    return res.status(200).json({ ok: true, msg: 'echo', headers: req.headers });
-  }
-
   // Временный health‑чекап
   if (req.method === 'GET') return res.status(200).send('OK: yookassa-webhook is live');
-  
+
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return res.status(405).end('Method Not Allowed');
   }
+
+  console.log('WEBHOOK HIT', req.method, req.url, req.headers['x-vercel-deployment-url']);
 
   // --- Basic Auth (можно отключить флагом) --- //
   const basicAuthDisabled = process.env.WEBHOOK_BASIC_AUTH_DISABLED === 'true';
@@ -46,8 +36,15 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     if (authHeader !== expectedAuth) return res.status(401).send('Invalid credentials');
   }
 
+  if (req.method === 'POST' && req.query?.echo === '1') {
+    // Примитивный эхо-ответ без чтения body
+    return res.status(200).json({ ok: true, msg: 'echo', headers: req.headers });
+  }
+
   try {
     const rawBody = await readRawBody(req);
+    console.log('BODY LEN', rawBody?.length ?? 0);
+
     if (!rawBody) {
       console.warn('Empty body on webhook');
       return res.status(400).json({ ok: false, error: 'Empty body' });
