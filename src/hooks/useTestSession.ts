@@ -112,12 +112,37 @@ export const useTestSession = () => {
     await updateTest({ memory_results: results as any });
   }, [updateTest]);
 
-  const completeTest = useCallback(async () => {
+  const completeTest = useCallback(async (reportHtml?: string) => {
     await updateTest({
       is_completed: true,
       completed_at: new Date().toISOString(),
     });
-  }, [updateTest]);
+
+    // Отправляем результаты по email, если есть отчет и email
+    if (test?.email && reportHtml) {
+      try {
+        const response = await fetch('/api/send-results', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            testId: test.id,
+            email: test.email,
+            reportHtml: reportHtml,
+          }),
+        });
+
+        if (!response.ok) {
+          console.error('Failed to send results email:', await response.text());
+        } else {
+          console.log('Results email sent successfully');
+        }
+      } catch (error) {
+        console.error('Error sending results email:', error);
+      }
+    }
+  }, [updateTest, test]);
 
   const getTestByToken = useCallback(async (token: string) => {
     try {

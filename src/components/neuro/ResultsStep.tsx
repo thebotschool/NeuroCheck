@@ -16,6 +16,7 @@ interface ResultsStepProps {
   gonogoResults: GoNoGoResult;
   memoryResults: MemoryResult;
   devMode?: boolean;
+  onComplete?: (reportHtml: string) => void;
 }
 
 export const ResultsStep = ({ 
@@ -23,11 +24,13 @@ export const ResultsStep = ({
   tcpResults, 
   gonogoResults, 
   memoryResults,
-  devMode = false
+  devMode = false,
+  onComplete
 }: ResultsStepProps) => {
   const [resultSummary, setResultSummary] = useState<string>('');
   const [detailedReport, setDetailedReport] = useState<string>('');
   const [reportLoading, setReportLoading] = useState(true);
+  const [emailSent, setEmailSent] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
 
   const handleDownloadPdf = () => {
@@ -105,6 +108,14 @@ export const ResultsStep = ({
 
     calculateScoresAndLoadReport();
   }, [tcpResults, gonogoResults, memoryResults, test.age]);
+
+  // Отправляем email с результатами после загрузки отчета
+  useEffect(() => {
+    if (!reportLoading && detailedReport && !emailSent && onComplete) {
+      setEmailSent(true);
+      onComplete(detailedReport);
+    }
+  }, [reportLoading, detailedReport, emailSent, onComplete]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 to-accent/5 p-4">

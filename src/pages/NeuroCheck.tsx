@@ -116,8 +116,8 @@ const NeuroCheck = () => {
   const handleMemoryComplete = async (results: MemoryResult) => {
     setMemoryResults(results);
     await saveMemoryResults(results);
-    await completeTest();
     setCurrentStep('results');
+    // completeTest будет вызван в ResultsStep после генерации отчета
   };
 
   if (isMobile) return <MobileBlocked onBackToLanding={() => {}} />;
@@ -301,6 +301,9 @@ const NeuroCheck = () => {
             gonogoResults={gonogoResults}
             memoryResults={memoryResults}
             devMode={devMode}
+            onComplete={async (reportHtml) => {
+              await completeTest(reportHtml);
+            }}
           />
         );
       }

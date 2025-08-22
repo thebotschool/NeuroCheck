@@ -9,16 +9,16 @@ interface Props {
 
 export const AgeSelectAfterConsent: React.FC<Props> = ({ onSelect, onCancel }) => {
   const options = [
-    { key: '7-10', label: '7–10 лет' },
-    { key: '11-14', label: '11–14 лет' },
-    { key: '15-18', label: '15–18 лет' },
+    { key: '7-9', label: '7–9 лет' },
+    { key: '10-13', label: '10–13 лет' },
+    { key: '14-18', label: '14–18 лет' },
     { key: '19-22', label: '19–22 года' },
     { key: '23+', label: '23+ лет' },
   ];
   const emojiMap: Record<string, string> = {
-    '7-10': '🧒',
-    '11-14': '👦',
-    '15-18': '🧑',
+    '7-9': '🧒',
+    '10-13': '👦',
+    '14-18': '🧑',
     '19-22': '🧑‍🎓',
     '23+': '👩',
   };

@@ -63,7 +63,7 @@ export default async (req: VercelRequest, res: VercelResponse) => {
 
     // ⚠️ ЛЕНИВЫЕ ИМПОРТЫ здесь:
     const { getAdminClient } = await import('./_lib/supabaseServer');
-    const { sendAccessEmail } = await import('./_lib/resend');
+    const { sendAccessEmail } = await import('./_lib/mailersend');
 
     const payment = payload.object;
     const paymentId = payment.id;
