@@ -67,12 +67,8 @@ export const ResultsStep = ({
 
   useEffect(() => {
     const calculateScoresAndLoadReport = async () => {
-      console.log('test.age:', test.age);
       const ageNum = test.age || 3;
       const representativeAge = ageGroupReverseMapping[ageNum] || 15;
-      console.log('representativeAge:', representativeAge);
-      const ageGroup = getAgeGroup(representativeAge);
-      console.log('ageGroup:', ageGroup);
 
       const x = scoreTCP(tcpResults, representativeAge);
       const y = scoreGoNoGo(gonogoResults, representativeAge);
@@ -83,11 +79,11 @@ export const ResultsStep = ({
       if (summary) {
         try {
           setReportLoading(true);
-          const reportContent = await loadDetailedReport(summary, representativeAge);
+          const reportContent = await loadDetailedReport(summary, ageNum);
           if (reportContent) {
             setDetailedReport(reportContent);
           } else {
-            const fallbackReport = generateFallbackReport(summary, representativeAge);
+            const fallbackReport = generateFallbackReport(summary, ageNum);
             setDetailedReport(fallbackReport);
             toast({
               title: 'Используется базовый отчет',

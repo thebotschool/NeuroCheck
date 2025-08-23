@@ -61,14 +61,14 @@ export function getAllPossibleSummaryKeys(): string[] {
 /**
  * Генерирует fallback отчет, если детальный отчет не найден
  */
-export function generateFallbackReport(summaryKey: string, age: number): string {
-  const ageGroup = getAgeGroup(age);
+export function generateFallbackReport(summaryKey: string, ageGroupId: number): string {
+  const ageGroup = getAgeGroup(ageGroupId);
   const [x, y, z] = summaryKey.match(/X(\d)-Y(\d)-Z(\d)/)?.slice(1) || ['1', '1', '1'];
   const memoryLevel = 5 - parseInt(z);
   
   return `# Краткий отчет (${summaryKey})
 
-## Результаты тестирования (возраст: ${age} лет)
+## Результаты тестирования (возраст: ${ageGroupNumberToString[ageGroupId] || 'Не указано'} лет)
 
 **Код результата:** ${summaryKey}
 
