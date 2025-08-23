@@ -15,11 +15,11 @@ const ReportPage = () => {
   const { test, getTestByToken } = useTestSession();
   const [reportContent, setReportContent] = useState('');
   const [loading, setLoading] = useState(true);
-  const reportRef = useRef<HTMLDivElement>(null);
+  const printRef = useRef<HTMLDivElement>(null);
 
   const handleDownloadPdf = () => {
-    if (reportRef.current) {
-      generatePdf(reportRef.current, `neuro-report-${test?.id}`);
+    if (printRef.current) {
+      generatePdf(printRef.current, `neuro-report-${test?.id}`);
     }
   };
 
@@ -44,7 +44,7 @@ const ReportPage = () => {
           try {
             const report = await loadDetailedReport(summary, ageNum);
             if (report) {
-              setReportContent(report);
+              setReportContent(report.replace(/(<!-- page-break -->\s*)+$/, ''));
             } else {
               const fallbackReport = generateFallbackReport(summary, ageNum);
               setReportContent(fallbackReport);
@@ -77,7 +77,7 @@ const ReportPage = () => {
           Скачать PDF
         </Button>
       </div>
-      <div ref={reportRef} className="space-y-6 text-gray-800">
+      <div className="space-y-6 text-gray-800">
         <ReactMarkdown remarkPlugins={[remarkGfm]}>{reportContent.replace(/<!-- page-break -->/g, '')}</ReactMarkdown>
       </div>
       <div className="flex justify-end mt-6">
@@ -85,6 +85,16 @@ const ReportPage = () => {
           <Download className="mr-2 h-4 w-4" />
           Скачать PDF
         </Button>
+      </div>
+
+      <div style={{ position: 'absolute', left: '-9999px' }}>
+        <div ref={printRef} className="prose max-w-none p-4 border rounded-lg bg-white report-content">
+          {reportContent.split('<!-- page-break -->').map((page, index) => (
+            <div key={index} className={index === 0 ? '' : 'page-break-before'}>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{page}</ReactMarkdown>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
