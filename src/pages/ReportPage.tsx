@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTestSession } from '@/hooks/useTestSession';
 import { loadDetailedReport, generateFallbackReport } from '@/lib/reportLoader';
@@ -6,12 +6,22 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import LoadingScreen from '@/components/neuro/LoadingScreen';
 import { scoreTCP, scoreGoNoGo, scoreMemory, buildSummaryKey, ageGroupReverseMapping, ageGroupNumberToString } from '@/lib/scoring';
+import { Button } from '@/components/ui/button';
+import { Download } from 'lucide-react';
+import { generatePdf } from '@/lib/pdfGenerator';
 
 const ReportPage = () => {
   const { id } = useParams<{ id: string }>();
   const { test, getTestByToken } = useTestSession();
   const [reportContent, setReportContent] = useState('');
   const [loading, setLoading] = useState(true);
+  const reportRef = useRef<HTMLDivElement>(null);
+
+  const handleDownloadPdf = () => {
+    if (reportRef.current) {
+      generatePdf(reportRef.current, `neuro-report-${test?.id}`);
+    }
+  };
 
   useEffect(() => {
     if (id) {
@@ -57,10 +67,24 @@ const ReportPage = () => {
 
   return (
     <div className="min-h-screen bg-white p-8 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Отчет о прохождении NeuroCheck</h1>
-      <h2 className="text-xl font-bold mb-6">Возраст: {ageGroupNumberToString[test?.age || 0] || 'Не указано'}</h2>
-      <div className="space-y-6 text-gray-800">
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>{reportContent}</ReactMarkdown>
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-3xl font-bold">Отчет о прохождении NeuroCheck</h1>
+          <h2 className="text-xl font-bold">Возраст: {ageGroupNumberToString[test?.age || 0] || 'Не указано'}</h2>
+        </div>
+        <Button onClick={handleDownloadPdf} variant="outline">
+          <Download className="mr-2 h-4 w-4" />
+          Скачать PDF
+        </Button>
+      </div>
+      <div ref={reportRef} className="space-y-6 text-gray-800">
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>{reportContent.replace(/<!-- page-break -->/g, '')}</ReactMarkdown>
+      </div>
+      <div className="flex justify-end mt-6">
+        <Button onClick={handleDownloadPdf} variant="outline">
+          <Download className="mr-2 h-4 w-4" />
+          Скачать PDF
+        </Button>
       </div>
     </div>
   );
