@@ -8,7 +8,8 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "vercel-dev": "vercel dev"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -49,6 +50,7 @@
     "dompurify": "^3.2.6",
     "embla-carousel-react": "^8.6.0",
     "html2canvas": "^1.4.1",
+    "html2pdf.js": "^0.11.0",
     "input-otp": "^1.4.2",
     "jspdf": "^3.0.1",
     "lucide-react": "^0.462.0",

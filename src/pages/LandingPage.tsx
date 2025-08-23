@@ -16,7 +16,7 @@ export default function LandingPage() {
         <p className="text-lg text-gray-600">
           Помогаем понять, как работают внимание, самоконтроль и память — за 15 минут, без сложного оборудования и без присутствия специалистов.
         </p>
-        <Button className="text-lg px-6 py-4" onClick={() => navigate('/payment')}>Начать тест</Button>
+        <Button className="text-lg px-6 py-4" onClick={() => navigate('/access')}>Начать тест</Button>
         
       </section>
 
@@ -89,7 +89,7 @@ export default function LandingPage() {
 
       {/* Final CTA */}
       <section className="text-center">
-        <Button className="text-lg px-8 py-4" onClick={() => navigate('/payment')}>Пройти диагностику</Button>
+        <Button className="text-lg px-8 py-4" onClick={() => navigate('/access')}>Пройти диагностику</Button>
         
       </section>
 

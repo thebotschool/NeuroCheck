@@ -119,3 +119,36 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+  .page-container {
+    page-break-after: always;
+  }
+  .avoid-break { break-inside: avoid; page-break-inside: avoid; }
+  .page-break { break-before: page; page-break-before: always; }
+  .report-content h1, .report-content h2, .report-content h3, .report-content p, .report-content li {
+    page-break-inside: avoid;
+  }
+
+  .report-content h1 {
+    @apply text-3xl font-bold mb-6 text-primary;
+  }
+  .report-content h2 {
+    @apply text-2xl font-semibold mb-5 text-primary;
+  }
+  .report-content h3 {
+    @apply text-xl font-semibold mb-4;
+  }
+  .report-content p {
+    @apply mb-6 leading-loose;
+  }
+  .report-content ul {
+    @apply list-disc list-inside mb-6 pl-6;
+  }
+  .report-content li {
+    @apply mb-3;
+  }
+  .report-content strong {
+    @apply font-bold;
+  }
+}

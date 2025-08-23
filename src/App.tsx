@@ -9,6 +9,8 @@ import PaymentPage from "./pages/PaymentPage";
 import SuccessPage from "./pages/SuccessPage";
 import NotFound from "./pages/NotFound";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import AdminPage from "./pages/AdminPage";
+import AccessPage from "./pages/AccessPage";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +26,8 @@ const App = () => (
           <Route path="/payment" element={<PaymentPage />} />
           <Route path="/success" element={<SuccessPage />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/admin" element={<AdminPage />} />
+          <Route path="/access" element={<AccessPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

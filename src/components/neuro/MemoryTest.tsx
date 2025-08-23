@@ -71,6 +71,22 @@ export const MemoryTest = ({ onComplete, age, devMode = false }: MemoryTestProps
     }
   }, [phase, currentMemorizeIndex, sequenceLength]);
 
+  useEffect(() => {
+    if (phase !== 'fixation') return;
+    const started = Date.now();
+    const i = setInterval(() => {
+      const elapsed = Date.now() - started;
+      const remain = Math.max(0, 10000 - elapsed);
+      setRemainingFixationMs(remain);
+      if (remain <= 0) {
+        clearInterval(i);
+        setPhase('distract');
+        setRemainingDistractMs(DISTRACTOR_MS);
+      }
+    }, 250);
+    return () => clearInterval(i);
+  }, [phase]);
+
   const showDevControls = import.meta.env.VITE_SHOW_DEV_CONTROLS === 'true' || devMode;
 
   useEffect(() => {
@@ -269,6 +285,31 @@ export const MemoryTest = ({ onComplete, age, devMode = false }: MemoryTestProps
                   </div>
                 );
               })}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (phase === 'fixation') {
+    const ss = String(Math.ceil(remainingFixationMs / 1000)).padStart(2, '0');
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-primary/5 to-accent/5 p-4">
+        <Card className="w-full max-w-6xl">
+          <CardHeader className="text-center">
+            <CardTitle>Запомните последовательность</CardTitle>
+            <CardDescription>
+              Время на запоминание: {ss}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-flow-col auto-cols-fr gap-2 py-4">
+              {targetSequence.map((cardSrc, index) => (
+                <div key={index} className="aspect-square rounded-lg border-2 border-dashed border-muted-foreground/40 flex items-center justify-center overflow-hidden">
+                  <img src={cardSrc} alt="card" className="w-full h-full object-cover" />
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>

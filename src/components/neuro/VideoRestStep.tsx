@@ -39,6 +39,19 @@ export const VideoRestStep = ({ onContinue, vimeoVideoId, durationMs = 120000, d
   useEffect(() => {
     if (player) {
       player.setVolume(isMuted ? 0 : 0.5);
+
+      const onEnded = () => {
+        player.getDuration().then((duration) => {
+          player.setCurrentTime(duration - 0.1);
+          player.pause();
+        });
+      };
+
+      player.on('ended', onEnded);
+
+      return () => {
+        player.off('ended', onEnded);
+      };
     }
   }, [player, isMuted]);
 

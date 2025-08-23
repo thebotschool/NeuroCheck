@@ -50,6 +50,7 @@ export default async function handler(req: Request): Promise<Response> {
 
     if (!sel.ok) {
       const txt = await sel.text().catch(() => '');
+      console.error('Supabase select failed:', { status: sel.status, body: txt });
       return json({ ok: false, error: 'select_failed', status: sel.status, body: txt }, 500);
     }
 

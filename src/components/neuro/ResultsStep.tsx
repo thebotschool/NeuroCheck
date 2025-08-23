@@ -109,7 +109,7 @@ export const ResultsStep = ({
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 to-accent/5 p-4">
       <div className="max-w-4xl mx-auto">
-        <Card>
+        <Card className="avoid-break">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
               <CardTitle className="text-2xl">Результаты тестирования</CardTitle>
@@ -129,46 +129,32 @@ export const ResultsStep = ({
               )}
             </div>
           </CardHeader>
-          <CardContent ref={reportRef}>
-            {reportLoading ? (
-              <div className="text-center p-8">
-                <p>Загрузка отчета...</p>
-              </div>
-            ) : (
-              <div className="prose max-w-none p-4 border rounded-lg bg-gray-50">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{detailedReport}</ReactMarkdown>
-              </div>
-            )}
-            {devMode && (
-              <div className="mt-6 p-4 border rounded-md bg-gray-50">
-                <h4 className="font-semibold text-sm mb-2">Dev Mode: Raw Results</h4>
-                <div className="text-xs space-y-2">
-                  <div>
-                    <strong>Result Summary:</strong> {resultSummary}
-                  </div>
-                  <div>
-                    <strong>TCP Results:</strong>
-                    <pre className="text-xs bg-gray-100 p-2 rounded mt-1">
-                      {JSON.stringify(tcpResults, null, 2)}
-                    </pre>
-                  </div>
-                  <div>
-                    <strong>Go/No-Go Results:</strong>
-                    <pre className="text-xs bg-gray-100 p-2 rounded mt-1">
-                      {JSON.stringify(gonogoResults, null, 2)}
-                    </pre>
-                  </div>
-                  <div>
-                    <strong>Memory Results:</strong>
-                    <pre className="text-xs bg-gray-100 p-2 rounded mt-1">
-                      {JSON.stringify(memoryResults, null, 2)}
-                    </pre>
-                  </div>
-                </div>
-              </div>
-            )}
+          <CardContent>
+            <div className="prose max-w-none p-4">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {`🎉 **Супер, ты молодец!** 🌟  
+
+Поздравляем, ты прошёл(ла) **NeuroCheck**! Это было крутое приключение, и ты справился(ась) на все 100%! 💪 Твои старания помогут сделать учёбу ещё интереснее и легче.  
+
+📬 **Что дальше?**  
+Мы отправим результаты твоим родителям на почту. Поговори с ними о том, как всё прошло — они будут рады услышать, какой ты чемпион!  
+
+🚀 **Удачи в учёбе!** Продолжай сиять, и пусть каждый день приносит новые открытия! Если хочешь больше идей, как учиться с радостью, загляни с родителями в наш Telegram-канал [**"PROdetej | Больше, чем просто учеба"**](https://t.me/ennkki).  
+
+**Ты — звезда!** ✨`}
+              </ReactMarkdown>
+            </div>
           </CardContent>
         </Card>
+      </div>
+      <div style={{ position: 'absolute', left: '-9999px' }}>
+        <div ref={reportRef} className="prose max-w-none p-4 border rounded-lg bg-white report-content">
+          {detailedReport.split('<!-- page-break -->').map((page, index) => (
+            <div key={index} className="page-container">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{page}</ReactMarkdown>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
