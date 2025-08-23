@@ -32,22 +32,17 @@ export const useTestSession = () => {
   const [loading, setLoading] = useState(false);
 
   const updateTestWithUserData = useCallback(async (token: string, name: string, age: number, email: string) => {
+    if (!test) return null;
     try {
       setLoading(true);
-      // Note: The 'name' field is not in the DB schema and is only held in local state.
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('tests')
         .update({ age, email })
-        .eq('token', token)
-        .select()
-        .single();
+        .eq('token', token);
 
       if (error) throw error;
 
-      const updatedTest = fromRow(data);
-      // Manually add the app-specific fields to the local state
-      updatedTest.name = name;
-
+      const updatedTest: Test = { ...test, age, email, name };
       setTest(updatedTest);
       return updatedTest;
     } catch (error) {
@@ -61,7 +56,7 @@ export const useTestSession = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [test]);
 
   const updateTest = useCallback(async (updates: Partial<TestRow>) => {
     if (!test) return;
