@@ -120,6 +120,9 @@ const NeuroCheck = () => {
     setMemoryResults(results);
     await saveMemoryResults(results);
     await completeTest();
+    if (test) {
+      await getTestByToken(test.token);
+    }
     setCurrentStep('results');
   };
 
