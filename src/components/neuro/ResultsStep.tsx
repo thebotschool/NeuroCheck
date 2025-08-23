@@ -6,7 +6,7 @@ import { Download } from 'lucide-react';
 import { buildSummaryKey, scoreTCP, scoreGoNoGo, scoreMemory, ageGroupReverseMapping, ageGroupNumberToString } from '@/lib/scoring';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { loadDetailedReport, generateFallbackReport, getAgeGroup } from '@/lib/reportLoader';
+import { loadDetailedReport, generateFallbackReport } from '@/lib/reportLoader';
 import { toast } from '@/hooks/use-toast';
 import { generatePdf } from '@/lib/pdfGenerator';
 

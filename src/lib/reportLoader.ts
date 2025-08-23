@@ -1,18 +1,19 @@
-/**
- * Загрузчик детальных отчетов по X-Y-Z кодам и возрасту
- */
+import { ageGroupNumberToString } from './scoring';
 
-export function getAgeGroup(age: number): string {
-  if (age >= 7 && age <= 9) return '7_9';
-  if (age >= 10 && age <= 13) return '10_13';
-  if (age >= 14 && age <= 18) return '14_18';
-  if (age >= 19 && age <= 22) return '19_22';
-  return '23+';
+export function getAgeGroupFromId(ageGroupId: number): string {
+  switch (ageGroupId) {
+    case 1: return '7_9';
+    case 2: return '10_13';
+    case 3: return '14_18';
+    case 4: return '19_22';
+    case 5: return '23_plus';
+    default: return '14_18'; // Fallback to the most common group
+  }
 }
 
-export async function loadDetailedReport(summaryKey: string, age: number): Promise<string | null> {
+export async function loadDetailedReport(summaryKey: string, ageGroupId: number): Promise<string | null> {
   try {
-    const ageGroup = getAgeGroup(age);
+    const ageGroup = getAgeGroupFromId(ageGroupId);
     
     // Пытаемся загрузить отчет из внешней папки data
     const response = await fetch(`/data/reports_${ageGroup}_md/${summaryKey}.md`);
@@ -33,9 +34,9 @@ export async function loadDetailedReport(summaryKey: string, age: number): Promi
 /**
  * Проверяет, доступен ли детальный отчет для данного кода и возраста
  */
-export async function isReportAvailable(summaryKey: string, age: number): Promise<boolean> {
+export async function isReportAvailable(summaryKey: string, ageGroupId: number): Promise<boolean> {
   try {
-    const ageGroup = getAgeGroup(age);
+    const ageGroup = getAgeGroupFromId(ageGroupId);
     const response = await fetch(`/data/reports_${ageGroup}_md/${summaryKey}.md`, { method: 'HEAD' });
     return response.ok;
   } catch {
@@ -62,28 +63,10 @@ export function getAllPossibleSummaryKeys(): string[] {
  * Генерирует fallback отчет, если детальный отчет не найден
  */
 export function generateFallbackReport(summaryKey: string, ageGroupId: number): string {
-  const ageGroup = getAgeGroup(ageGroupId);
   const [x, y, z] = summaryKey.match(/X(\d)-Y(\d)-Z(\d)/)?.slice(1) || ['1', '1', '1'];
   const memoryLevel = 5 - parseInt(z);
   
-  return `# Краткий отчет (${summaryKey})
-
-## Результаты тестирования (возраст: ${ageGroupNumberToString[ageGroupId] || 'Не указано'} лет)
-
-**Код результата:** ${summaryKey}
-
-### Тест внимания (TCP): Уровень ${x}/4
-${getScoreDescription('attention', parseInt(x))}
-
-### Тест самоконтроля (Go/No-Go): Уровень ${y}/4  
-${getScoreDescription('control', parseInt(y))}
-
-### Тест памяти: Уровень ${memoryLevel}/4
-${getScoreDescription('memory', parseInt(z))}
-
----
-
-*Детальный отчет для данной комбинации результатов пока недоступен. Обратитесь к специалисту для получения персонализированных рекомендаций.*
+  return `# Краткий отчет (${summaryKey})\n\n## Результаты тестирования (возраст: ${ageGroupNumberToString[ageGroupId] || 'Не указано'} лет)\n\n**Код результата:** ${summaryKey}\n\n### Тест внимания (TCP): Уровень ${x}/4\n${getScoreDescription('attention', parseInt(x))}\n\n### Тест самоконтроля (Go/No-Go): Уровень ${y}/4  \n${getScoreDescription('control', parseInt(y))}\n\n### Тест памяти: Уровень ${memoryLevel}/4\n${getScoreDescription('memory', parseInt(z))}\n\n---\n\n*Детальный отчет для данной комбинации результатов пока недоступен. Обратитесь к специалисту для получения персонализированных рекомендаций.*
 `;
 }
 
@@ -111,3 +94,4 @@ function getScoreDescription(testType: 'attention' | 'control' | 'memory', score
   
   return descriptions[testType][score as keyof typeof descriptions[typeof testType]] || 'Не определено';
 }
+
