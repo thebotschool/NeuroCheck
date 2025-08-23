@@ -30,7 +30,7 @@ export const ResultsStep = ({
   const [resultSummary, setResultSummary] = useState<string>('');
   const [detailedReport, setDetailedReport] = useState<string>('');
   const [reportLoading, setReportLoading] = useState(true);
-  const [emailSent, setEmailSent] = useState(false);
+  const onCompleteCalled = useRef(false);
   const reportRef = useRef<HTMLDivElement>(null);
 
   const handleDownloadPdf = () => {
@@ -109,13 +109,12 @@ export const ResultsStep = ({
     calculateScoresAndLoadReport();
   }, [tcpResults, gonogoResults, memoryResults, test.age]);
 
-  // Отправляем email с результатами после загрузки отчета
   useEffect(() => {
-    if (!reportLoading && detailedReport && !emailSent && onComplete) {
-      setEmailSent(true);
+    if (!reportLoading && detailedReport && onComplete && !onCompleteCalled.current) {
+      onCompleteCalled.current = true;
       onComplete(detailedReport);
     }
-  }, [reportLoading, detailedReport, emailSent, onComplete]);
+  }, [reportLoading, detailedReport, onComplete]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 to-accent/5 p-4">
@@ -146,7 +145,7 @@ export const ResultsStep = ({
                 <p>Загрузка отчета...</p>
               </div>
             ) : (
-              <div className="prose max-w-none p-4 border rounded-lg bg-gray-50">
+              <div className="prose max-w-none p-4 border rounded-lg bg-gray-50 report-content">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{detailedReport}</ReactMarkdown>
               </div>
             )}

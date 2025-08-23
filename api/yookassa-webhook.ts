@@ -67,7 +67,7 @@ export default async (req: VercelRequest, res: VercelResponse) => {
 
     const payment = payload.object;
     const paymentId = payment.id;
-    let email = payment.metadata?.email || payment.customer?.email || '';
+    const email = payment.metadata?.email || payment.customer?.email || '';
 
     if (!email) console.warn(`Email missing for payment ${paymentId}`);
 

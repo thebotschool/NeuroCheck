@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Play, ArrowRight, RotateCcw, Volume2, VolumeX } from 'lucide-react';
+import Player from '@vimeo/player';
 
 interface VideoRestStepProps {
   onContinue: () => void;
@@ -13,27 +14,16 @@ interface VideoRestStepProps {
 export const VideoRestStep = ({ onContinue, vimeoVideoId, durationMs = 120000, devMode = false }: VideoRestStepProps) => {
   const [showContinueButton, setShowContinueButton] = useState(false);
   const [remainingMs, setRemainingMs] = useState(durationMs);
-  const [player, setPlayer] = useState<any>(null);
+  const [player, setPlayer] = useState<Player | null>(null);
   const [isMuted, setIsMuted] = useState(true);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const showDevControls = import.meta.env.VITE_SHOW_DEV_CONTROLS === 'true' || devMode;
 
   useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'https://player.vimeo.com/api/player.js';
-    script.async = true;
-    document.body.appendChild(script);
-
-    script.onload = () => {
-      if (iframeRef.current) {
-        const vimeoPlayer = new (window as any).Vimeo.Player(iframeRef.current);
-        setPlayer(vimeoPlayer);
-      }
-    };
-
-    return () => {
-      document.body.removeChild(script);
-    };
+    if (iframeRef.current) {
+      const vimeoPlayer = new Player(iframeRef.current);
+      setPlayer(vimeoPlayer);
+    }
   }, []);
 
   useEffect(() => {
@@ -57,7 +47,7 @@ export const VideoRestStep = ({ onContinue, vimeoVideoId, durationMs = 120000, d
     return () => clearInterval(i);
   }, [durationMs]);
 
-  const vimeoSrc = `https://player.vimeo.com/video/${vimeoVideoId}?autoplay=1&loop=1&playsinline=1&dnt=1&controls=0&byline=0&title=0`;
+  const vimeoSrc = `https://player.vimeo.com/video/${vimeoVideoId}?autoplay=1&loop=0&playsinline=1&dnt=1&controls=0&byline=0&title=0`;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-accent/5 p-4">

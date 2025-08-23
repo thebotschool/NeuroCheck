@@ -1,15 +1,24 @@
 // api/consume-token.ts  (EDGE + REST)
 export const config = { runtime: 'edge' };
 
-const json = (d: any, s = 200) =>
+const json = (d: Record<string, unknown>, s = 200) =>
   new Response(JSON.stringify(d), { status: s, headers: { 'content-type': 'application/json' } });
+
+interface RequestBody {
+  token?: string;
+  markAsCompleted?: boolean;
+}
 
 export default async function handler(req: Request): Promise<Response> {
   try {
     if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
 
-    let body: any;
-    try { body = await req.json(); } catch { return json({ error: 'invalid_json' }, 400); }
+    let body: RequestBody;
+    try {
+      body = await req.json();
+    } catch {
+      return json({ error: 'invalid_json' }, 400);
+    }
 
     const token = (body?.token ?? '').toString().trim();
     const markAsCompleted = !!body?.markAsCompleted;
@@ -34,7 +43,7 @@ export default async function handler(req: Request): Promise<Response> {
     if (!sel.ok) {
       return json({ consumed: false, reason: 'select_failed', status: sel.status }, 500);
     }
-    const rows = await sel.json() as Array<{ used: boolean; expires_at: string | null; is_completed: boolean; id: string }>;
+    const rows = (await sel.json()) as Array<{ used: boolean; expires_at: string | null; is_completed: boolean; id: string }>;
     const row = rows[0];
     if (!row) return json({ consumed: false, reason: 'not_found' });
 
@@ -42,7 +51,7 @@ export default async function handler(req: Request): Promise<Response> {
     if (row.expires_at && new Date(row.expires_at) < new Date()) return json({ consumed: false, reason: 'expired' });
 
     // 2) UPDATE used / is_completed
-    const updates: Record<string, any> = { used: true };
+    const updates: { used: boolean; is_completed?: boolean } = { used: true };
     if (markAsCompleted) updates.is_completed = true;
 
     const upd = await fetch(`${SUPABASE_URL}/rest/v1/tests?token=eq.${encodeURIComponent(token)}`, {

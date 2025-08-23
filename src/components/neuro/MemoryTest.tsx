@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { MemoryResult } from '@/types/test';
 import { toast } from '@/hooks/use-toast';
 import { Volume2, VolumeX } from 'lucide-react';
+import Player from '@vimeo/player';
 
 interface MemoryTestProps {
   onComplete: (results: MemoryResult) => void;
@@ -38,7 +39,7 @@ export const MemoryTest = ({ onComplete, age, devMode = false }: MemoryTestProps
   const [firstDropSlot, setFirstDropSlot] = useState<number | null>(null);
 
   // Vimeo player state
-  const [player, setPlayer] = useState<any>(null);
+  const [player, setPlayer] = useState<Player | null>(null);
   const [isMuted, setIsMuted] = useState(true);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
@@ -94,22 +95,9 @@ export const MemoryTest = ({ onComplete, age, devMode = false }: MemoryTestProps
   }, [phase, sequenceLength, targetSequence]);
 
   useEffect(() => {
-    if (phase === 'distract') {
-      const script = document.createElement('script');
-      script.src = 'https://player.vimeo.com/api/player.js';
-      script.async = true;
-      document.body.appendChild(script);
-
-      script.onload = () => {
-        if (iframeRef.current) {
-          const vimeoPlayer = new (window as any).Vimeo.Player(iframeRef.current);
-          setPlayer(vimeoPlayer);
-        }
-      };
-
-      return () => {
-        document.body.removeChild(script);
-      };
+    if (phase === 'distract' && iframeRef.current) {
+      const vimeoPlayer = new Player(iframeRef.current);
+      setPlayer(vimeoPlayer);
     }
   }, [phase]);
 

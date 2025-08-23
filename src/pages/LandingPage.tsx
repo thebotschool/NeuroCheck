@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -16,7 +16,7 @@ export default function LandingPage() {
         <p className="text-lg text-gray-600">
           Помогаем понять, как работают внимание, самоконтроль и память — за 15 минут, без сложного оборудования и без присутствия специалистов.
         </p>
-        <Button className="text-lg px-6 py-4" onClick={() => navigate('/payment')}>Начать тест</Button>
+        <Button className="text-lg px-6 py-4" onClick={() => navigate('/access')}>Начать тест</Button>
         
       </section>
 
@@ -94,9 +94,13 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="text-center text-gray-500 text-sm mt-16">
+      <footer className="text-center text-gray-500 text-sm mt-16 space-y-2">
         <p>© 2025 NeuroCheck. Все права защищены.</p>
-        
+        <div>
+          <Link to="/privacy" className="underline">Политика обработки персональных данных</Link>
+          <span className="mx-2">|</span>
+          <Link to="/offer" className="underline">Публичная оферта</Link>
+        </div>
       </footer>
     </div>
   );

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Test, TCPResult, GoNoGoResult, MemoryResult, TestRow } from '@/types/test';
 import { toast } from '@/hooks/use-toast';
@@ -16,7 +16,7 @@ const fromRow = (row: TestRow): Test => {
       }
     }
     // If it's not a string, assume it's already a parsed object or null/undefined
-    return field as any;
+    return field;
   };
 
   return {
@@ -64,12 +64,14 @@ export const useTestSession = () => {
   }, []);
 
   const updateTest = useCallback(async (updates: Partial<TestRow>) => {
-    if (!test) return;
+    let updatedTest: Test | null = null;
+    setTest(prevTest => {
+      if (!prevTest) return null;
+      updatedTest = { ...prevTest, ...updates } as Test;
+      return updatedTest;
+    });
 
-    try {
-      setLoading(true);
-      
-      // Create a payload with only the fields that exist in the DB
+    if (updatedTest) {
       const payload: Partial<TestRow> = {};
       if (updates.current_step !== undefined) payload.current_step = updates.current_step;
       if (updates.tcp_results !== undefined) payload.tcp_results = updates.tcp_results;
@@ -81,35 +83,29 @@ export const useTestSession = () => {
       const { error } = await supabase
         .from('tests')
         .update(payload)
-        .eq('id', test.id);
+        .eq('id', (updatedTest as Test).id);
 
-      if (error) throw error;
-
-      // Update local state optimistically
-      setTest(prevTest => ({ ...prevTest!, ...updates } as Test));
-
-    } catch (error) {
-      console.error('Error updating test:', error);
-      toast({
-        title: 'Ошибка',
-        description: 'Не удалось обновить сессию',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
+      if (error) {
+        console.error('Error updating test:', error);
+        toast({
+          title: 'Ошибка',
+          description: 'Не удалось обновить сессию',
+          variant: 'destructive',
+        });
+      }
     }
-  }, [test]);
+  }, []);
 
   const saveTCPResults = useCallback(async (results: TCPResult) => {
-    await updateTest({ tcp_results: results as any }); // Cast to any to match Json type
+    await updateTest({ tcp_results: results });
   }, [updateTest]);
 
   const saveGoNoGoResults = useCallback(async (results: GoNoGoResult) => {
-    await updateTest({ gonogo_results: results as any });
+    await updateTest({ gonogo_results: results });
   }, [updateTest]);
 
   const saveMemoryResults = useCallback(async (results: MemoryResult) => {
-    await updateTest({ memory_results: results as any });
+    await updateTest({ memory_results: results });
   }, [updateTest]);
 
   const completeTest = useCallback(async (reportHtml?: string) => {
@@ -118,31 +114,8 @@ export const useTestSession = () => {
       completed_at: new Date().toISOString(),
     });
 
-    // Отправляем результаты по email, если есть отчет и email
-    if (test?.email && reportHtml) {
-      try {
-        const response = await fetch('/api/send-results', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            testId: test.id,
-            email: test.email,
-            reportHtml: reportHtml,
-          }),
-        });
-
-        if (!response.ok) {
-          console.error('Failed to send results email:', await response.text());
-        } else {
-          console.log('Results email sent successfully');
-        }
-      } catch (error) {
-        console.error('Error sending results email:', error);
-      }
-    }
-  }, [updateTest, test]);
+    // The email sending is disabled as per user request
+  }, [updateTest]);
 
   const getTestByToken = useCallback(async (token: string) => {
     try {

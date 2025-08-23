@@ -7,9 +7,7 @@ export default async function handler(req: Request): Promise<Response> {
   try {
     if (req.method !== 'POST') return J({ error:'method_not_allowed' }, 405);
 
-    // body may be empty
     let body:any=null; try { body = await req.json(); } catch {}
-
     const DEV_BYPASS_TOKEN = (process.env.VITE_DEV_BYPASS_TOKEN ?? 'dev-token-123').toString();
     const token = (body?.token ?? DEV_BYPASS_TOKEN).toString().trim();
 
@@ -25,7 +23,7 @@ export default async function handler(req: Request): Promise<Response> {
       return J({ error:'server_misconfig', SUPABASE_URL:!!SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY:!!SERVICE_KEY }, 500);
     }
 
-    // Ensure row exists (UPSERT by unique token)
+    // UPSERT — чтобы запись гарантированно была
     {
       const r = await fetch(`${SUPABASE_URL}/rest/v1/tests`, {
         method:'POST',
@@ -46,7 +44,7 @@ export default async function handler(req: Request): Promise<Response> {
       if (!r.ok) return J({ ok:false, step:'upsert', status:r.status, body: await r.text().catch(()=>'(no text)') }, 500);
     }
 
-    // Reset flags
+    // PATCH — сброс флагов
     const patch = await fetch(`${SUPABASE_URL}/rest/v1/tests?token=eq.${encodeURIComponent(token)}`, {
       method:'PATCH',
       headers:{
@@ -65,17 +63,20 @@ export default async function handler(req: Request): Promise<Response> {
         expires_at: new Date(Date.now()+90*24*3600*1000).toISOString()
       })
     });
+
     const patchedText = await patch.text().catch(()=>'(no text)');
     let patched:any=null; try { patched = JSON.parse(patchedText); } catch {}
-    if (!patch.ok) return J({ ok:false, step:'patch', status:patch.status, body:patchedText }, 500);
 
-    // Re-select for proof
+    if (!patch.ok) return J({ ok:false, step:'patch', status:patch.status, body:patchedText }, 500);
+    const row = Array.isArray(patched) ? patched[0] : patched;
+
+    // Контрольный re-select, чтобы исключить кеш PostgREST и увидеть итоговые значения
     const reSel = await fetch(`${SUPABASE_URL}/rest/v1/tests?token=eq.${encodeURIComponent(token)}&select=id,token,used,is_completed,current_step,completed_at,expires_at`, {
       headers:{ apikey:SERVICE_KEY, Authorization:`Bearer ${SERVICE_KEY}`, Prefer:'return=representation' }
     });
     const after = await reSel.json();
 
-    return J({ ok:true, token, after });
+    return J({ ok:true, token, patched: row, after });
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'unknown';
     return J({ ok:false, error:`reset-dev-token failed: ${msg}` }, 500);
