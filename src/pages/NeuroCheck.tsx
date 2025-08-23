@@ -30,6 +30,7 @@ const NeuroCheck = () => {
   const [testStarted, setTestStarted] = useState(false);
   const [timeBypassed, setTimeBypassed] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
+  const [isTestReadyForResults, setIsTestReadyForResults] = useState(false);
 
   const { test, loading, updateTestWithUserData, saveTCPResults, saveGoNoGoResults, saveMemoryResults, completeTest, getTestByToken } = useTestSession();
   const isMobile = useIsMobile();
@@ -122,6 +123,7 @@ const NeuroCheck = () => {
     await completeTest();
     if (test) {
       await getTestByToken(test.token);
+      setIsTestReadyForResults(true);
     }
     setCurrentStep('results');
   };
@@ -284,8 +286,8 @@ const NeuroCheck = () => {
         break;
 
       case 'results':
-        if (!test) {
-          content = <div>Ошибка: Данные сессии (test) отсутствуют.</div>;
+        if (!isTestReadyForResults || !test) {
+          content = <LoadingScreen />;
         } else if (!tcpResults) {
           content = <div>Ошибка: Результаты TCP-теста отсутствуют.</div>;
         } else if (!gonogoResults) {
