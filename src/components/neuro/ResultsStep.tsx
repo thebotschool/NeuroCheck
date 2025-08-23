@@ -6,7 +6,7 @@ import { Download } from 'lucide-react';
 import { buildSummaryKey, scoreTCP, scoreGoNoGo, scoreMemory, ageGroupReverseMapping, ageGroupNumberToString } from '@/lib/scoring';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { loadDetailedReport, generateFallbackReport } from '@/lib/reportLoader';
+import { loadDetailedReport, generateFallbackReport, getAgeGroup } from '@/lib/reportLoader';
 import { toast } from '@/hooks/use-toast';
 import { generatePdf } from '@/lib/pdfGenerator';
 
@@ -67,8 +67,12 @@ export const ResultsStep = ({
 
   useEffect(() => {
     const calculateScoresAndLoadReport = async () => {
+      console.log('test.age:', test.age);
       const ageNum = test.age || 3;
       const representativeAge = ageGroupReverseMapping[ageNum] || 15;
+      console.log('representativeAge:', representativeAge);
+      const ageGroup = getAgeGroup(representativeAge);
+      console.log('ageGroup:', ageGroup);
 
       const x = scoreTCP(tcpResults, representativeAge);
       const y = scoreGoNoGo(gonogoResults, representativeAge);
