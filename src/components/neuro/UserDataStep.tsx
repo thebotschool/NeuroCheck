@@ -8,9 +8,9 @@ interface UserDataStepProps {
 
 export const UserDataStep = ({ onSuccess, email, onBack }: UserDataStepProps) => {
   const ageGroupMapping: Record<string, number> = {
-    '7-10': 1,
-    '11-14': 2,
-    '15-18': 3,
+    '7-9': 1,
+    '10-13': 2,
+    '14-18': 3,
     '19-22': 4,
     '23+': 5,
   };
