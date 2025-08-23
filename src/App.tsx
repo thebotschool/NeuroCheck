@@ -11,6 +11,10 @@ import NotFound from "./pages/NotFound";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import AdminPage from "./pages/AdminPage";
 import AccessPage from "./pages/AccessPage";
+import OfferPage from "./pages/OfferPage";
+import ReportPage from "./pages/ReportPage";
+import ExampleReportPage from "./pages/ExampleReportPage";
+import ValidationPage from "./pages/ValidationPage";
 
 const queryClient = new QueryClient();
 
@@ -26,8 +30,12 @@ const App = () => (
           <Route path="/payment" element={<PaymentPage />} />
           <Route path="/success" element={<SuccessPage />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/offer" element={<OfferPage />} />
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/access" element={<AccessPage />} />
+          <Route path="/report/:id" element={<ReportPage />} />
+          <Route path="/example-report" element={<ExampleReportPage />} />
+          <Route path="/validation" element={<ValidationPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

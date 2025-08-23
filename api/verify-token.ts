@@ -2,6 +2,8 @@
 // EDGE + Supabase REST. Проверяет токен и возвращает понятный JSON.
 // GET /api/verify-token?token=...   (можно и POST с { token })
 
+import { getAdminClient } from './_lib/supabaseServer';
+
 export const config = { runtime: 'edge' };
 
 const json = (d: any, s = 200) =>
@@ -26,43 +28,25 @@ export default async function handler(req: Request): Promise<Response> {
 
     if (!token) return json({ ok: false, error: 'token_required' }, 400);
 
-    const SUPABASE_URL = process.env.SUPABASE_URL;
-    const SERVICE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!SUPABASE_URL || !SERVICE_KEY) {
-      return json({
-        ok: false,
-        error: 'server_misconfig',
-        details: { SUPABASE_URL: !!SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY: !!SERVICE_KEY }
-      }, 500);
-    }
+    console.log('Verifying token:', token);
+
+    const supabase = getAdminClient();
+    console.log('Supabase client created');
 
     // Находим запись по токену
-    const sel = await fetch(
-      `${SUPABASE_URL}/rest/v1/tests?token=eq.${encodeURIComponent(token)}&select=id,used,is_completed,expires_at,started_at`,
-      {
-        headers: {
-          apikey: SERVICE_KEY,
-          Authorization: `Bearer ${SERVICE_KEY}`,
-          Prefer: 'return=representation'
-        }
-      }
-    );
+    const { data: rows, error } = await supabase
+      .from('tests')
+      .select('id,used,is_completed,expires_at,started_at')
+      .eq('token', token);
 
-    if (!sel.ok) {
-      const txt = await sel.text().catch(() => '');
-      console.error('Supabase select failed:', { status: sel.status, body: txt });
-      return json({ ok: false, error: 'select_failed', status: sel.status, body: txt }, 500);
+    console.log('Supabase query executed');
+
+    if (error) {
+      console.error('Supabase select failed:', error);
+      return json({ ok: false, error: 'select_failed', details: error }, 500);
     }
 
-    const rows = (await sel.json()) as Array<{
-      id: string;
-      used: boolean;
-      is_completed: boolean;
-      expires_at: string | null;
-      started_at: string;
-    }>;
-
-    const row = rows[0];
+    const row = rows?.[0];
     if (!row) return json({ ok: false, error: 'not_found' }, 200);
 
     // Простые проверки валидности

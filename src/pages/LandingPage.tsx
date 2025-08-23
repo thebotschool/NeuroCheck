@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -72,6 +72,14 @@ export default function LandingPage() {
           </li>
           <li>Отмечены особенности, которые стоит учитывать в учёбе и повседневной жизни.</li>
         </ul>
+        <div className="flex justify-center gap-4 mt-6">
+          <Button asChild variant="outline">
+            <Link to="/example-report">Пример отчета</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link to="/validation">Научное подтверждение</Link>
+          </Button>
+        </div>
       </section>
 
       
@@ -96,7 +104,11 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="text-center text-gray-500 text-sm mt-16">
         <p>© 2025 NeuroCheck. Все права защищены.</p>
-        
+        <div className="mt-4 text-center text-sm text-muted-foreground">
+          <Link to="/privacy" className="underline">Политика обработки персональных данных</Link>
+          <span className="mx-2">|</span>
+          <Link to="/offer" className="underline">Публичная оферта</Link>
+        </div>
       </footer>
     </div>
   );

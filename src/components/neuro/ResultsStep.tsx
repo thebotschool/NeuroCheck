@@ -2,13 +2,14 @@ import { useEffect, useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { TCPResult, GoNoGoResult, MemoryResult, Test } from '@/types/test';
-import { Download } from 'lucide-react';
+import { Download, FileText } from 'lucide-react';
 import { buildSummaryKey, scoreTCP, scoreGoNoGo, scoreMemory, ageGroupReverseMapping, ageGroupNumberToString } from '@/lib/scoring';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { loadDetailedReport, generateFallbackReport } from '@/lib/reportLoader';
 import { toast } from '@/hooks/use-toast';
 import { generatePdf } from '@/lib/pdfGenerator';
+import { Link } from 'react-router-dom';
 
 interface ResultsStepProps {
   test: Test;
@@ -118,6 +119,12 @@ export const ResultsStep = ({
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
+              <Button asChild variant="outline">
+                <Link to={`/report/${test.token}`}>
+                  <FileText className="mr-2 h-4 w-4" />
+                  Посмотреть отчет
+                </Link>
+              </Button>
               <Button onClick={handleDownloadPdf} variant="outline">
                 <Download className="mr-2 h-4 w-4" />
                 Скачать PDF
