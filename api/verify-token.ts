@@ -12,6 +12,7 @@ const json = (d: any, s = 200) =>
 export default async function handler(req: Request): Promise<Response> {
   try {
     let token = '';
+    let email = '';
     if (req.method === 'GET') {
       const url = new URL(req.url);
       token = (url.searchParams.get('token') ?? '').toString().trim();
@@ -19,6 +20,7 @@ export default async function handler(req: Request): Promise<Response> {
       try {
         const body = await req.json();
         token = (body?.token ?? '').toString().trim();
+        email = (body?.email ?? '').toString().trim();
       } catch {
         return json({ ok: false, error: 'invalid_json' }, 400);
       }
@@ -27,6 +29,7 @@ export default async function handler(req: Request): Promise<Response> {
     }
 
     if (!token) return json({ ok: false, error: 'token_required' }, 400);
+    if (req.method === 'POST' && !email) return json({ ok: false, error: 'email_required' }, 400);
 
     console.log('Verifying token:', token);
 
@@ -56,6 +59,19 @@ export default async function handler(req: Request): Promise<Response> {
 
     if (row.expires_at && new Date(row.expires_at) < new Date()) {
       return json({ ok: false, error: 'expired', testId: row.id, expires_at: row.expires_at }, 200);
+    }
+
+    // Если email передан, обновляем запись
+    if (email) {
+      const { error: updateError } = await supabase
+        .from('tests')
+        .update({ email })
+        .eq('id', row.id);
+
+      if (updateError) {
+        console.error('Supabase update failed:', updateError);
+        return json({ ok: false, error: 'update_failed', details: updateError }, 500);
+      }
     }
 
     // ⚠️ Ограничение 06:00–12:00 по местному времени пока НЕ enforced (оставлено на будущее),

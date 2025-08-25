@@ -22,6 +22,7 @@ const consentPoints = [
 export default function AccessPage() {
   const navigate = useNavigate();
   const [promoCode, setPromoCode] = useState('');
+  const [email, setEmail] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
   const [checkedState, setCheckedState] = useState(new Array(consentPoints.length).fill(false));
 
@@ -37,10 +38,10 @@ export default function AccessPage() {
   const handlePromoCodeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!promoCode.trim()) {
+    if (!promoCode.trim() || !email.trim()) {
       toast({
         title: 'Ошибка',
-        description: 'Введите промокод',
+        description: 'Введите почту и промокод',
         variant: 'destructive',
       });
       return;
@@ -83,6 +84,19 @@ export default function AccessPage() {
         }
         
         if (data.ok) {
+          // Update email in Supabase
+          await fetch(
+            `${SUPABASE_URL}/rest/v1/tests?id=eq.${data.testId}`,
+            {
+              method: 'PATCH',
+              headers: {
+                apikey: SUPABASE_ANON_KEY,
+                Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ email: email.trim() }),
+            }
+          );
           navigate(`/test?token=${encodeURIComponent(promoCode.trim())}`);
           return;
         } else {
@@ -106,7 +120,13 @@ export default function AccessPage() {
       }
       
       // Проверяем промокод (токен) через API (для продакшена)
-      const response = await fetch(`/api/verify-token?token=${encodeURIComponent(promoCode.trim())}`);
+      const response = await fetch(`/api/verify-token` , {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token: promoCode.trim(), email: email.trim() }),
+      });
       const data = await response.json();
 
       if (data.ok) {
@@ -231,6 +251,18 @@ export default function AccessPage() {
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handlePromoCodeSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Электронная почта</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="Введите вашу почту"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        disabled={isVerifying}
+                        required
+                      />
+                    </div>
                     <div className="space-y-2">
                       <Label htmlFor="promo-code">Промокод</Label>
                       <Input
