@@ -15,6 +15,7 @@ import OfferPage from "./pages/OfferPage";
 import ReportPage from "./pages/ReportPage";
 import ExampleReportPage from "./pages/ExampleReportPage";
 import ValidationPage from "./pages/ValidationPage";
+import ScrollToTop from "./components/ScrollToTop";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <ScrollToTop />
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/test" element={<NeuroCheck />} />

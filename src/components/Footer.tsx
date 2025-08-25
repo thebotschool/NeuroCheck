@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 const Footer = () => {
   return (
     <footer className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
-      <div className="pt-8">
+      <div className="py-8 px-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
             <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Реквизиты</h3>
@@ -31,7 +31,7 @@ const Footer = () => {
           </div>
         </div>
         <div className="mt-8 border-t border-gray-200 dark:border-gray-700 pt-8 text-center text-sm">
-          <p>&copy; {new Date().getFullYear()} cogntiview-lab. Все права защищены.</p>
+          <p>&copy; {new Date().getFullYear()} neurocheck. Все права защищены.</p>
         </div>
       </div>
     </footer>
