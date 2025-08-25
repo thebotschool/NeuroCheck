@@ -145,159 +145,160 @@ export default function AccessPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 to-accent/5 p-4">
-      <div className="max-w-2xl mx-auto">
-        {/* Кнопка назад */}
-        <div className="mb-6">
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate('/')}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            На главную
-          </Button>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 to-accent/5 flex flex-col">
+      <main className="flex-grow p-4">
+        <div className="max-w-2xl mx-auto">
+          {/* Кнопка назад */}
+          <div className="mb-6">
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate('/')}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              На главную
+            </Button>
+          </div>
 
-        {/* Заголовок */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-2">Доступ к тестированию</h1>
-          <p className="text-muted-foreground">
-            Выберите способ получения доступа к NeuroCheck
-          </p>
-        </div>
+          {/* Заголовок */}
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold mb-2">Доступ к тестированию</h1>
+            <p className="text-muted-foreground">
+              Выберите способ получения доступа к NeuroCheck
+            </p>
+          </div>
 
-        {/* Табы с выбором */}
-        <Tabs defaultValue="payment" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="payment" className="flex items-center gap-2">
-              <CreditCard className="h-4 w-4" />
-              Оплата
-            </TabsTrigger>
-            <TabsTrigger value="promo" className="flex items-center gap-2">
-              <Gift className="h-4 w-4" />
-              Промокод
-            </TabsTrigger>
-          </TabsList>
+          {/* Табы с выбором */}
+          <Tabs defaultValue="payment" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="payment" className="flex items-center gap-2">
+                <CreditCard className="h-4 w-4" />
+                Оплата
+              </TabsTrigger>
+              <TabsTrigger value="promo" className="flex items-center gap-2">
+                <Gift className="h-4 w-4" />
+                Промокод
+              </TabsTrigger>
+            </TabsList>
 
-          {/* Вкладка оплаты */}
-          <TabsContent value="payment">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CreditCard className="h-5 w-5" />
-                  Оплата тестирования
-                </CardTitle>
-                <CardDescription>
-                  Стоимость: 500 ₽ • Время прохождения: ~15 минут
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-blue-900 mb-2">Что входит в тестирование:</h4>
-                  <ul className="text-sm text-blue-800 space-y-1">
-                    <li>• Тест на внимание (TCP)</li>
-                    <li>• Тест на самоконтроль (Go/No-Go)</li>
-                    <li>• Тест на память</li>
-                    <li>• Персональный отчет с рекомендациями</li>
-                    <li>• Отправка результатов на email</li>
-                  </ul>
-                </div>
-                
-                <Button 
-                  onClick={() => navigate('/payment')} 
-                  className="w-full"
-                  size="lg"
-                  disabled={!allChecked}
-                >
-                  Перейти к оплате
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Вкладка промокода */}
-          <TabsContent value="promo">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Gift className="h-5 w-5" />
-                  Промокод
-                </CardTitle>
-                <CardDescription>
-                  Если у вас есть промокод, введите его ниже
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handlePromoCodeSubmit} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="promo-code">Промокод</Label>
-                    <Input
-                      id="promo-code"
-                      type="text"
-                      placeholder="Введите промокод"
-                      value={promoCode}
-                      onChange={(e) => setPromoCode(e.target.value)}
-                      disabled={isVerifying}
-                    />
+            {/* Вкладка оплаты */}
+            <TabsContent value="payment">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <CreditCard className="h-5 w-5" />
+                    Оплата тестирования
+                  </CardTitle>
+                  <CardDescription>
+                    Стоимость: 500 ₽ • Время прохождения: ~15 минут
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <h4 className="font-semibold text-blue-900 mb-2">Что входит в тестирование:</h4>
+                    <ul className="text-sm text-blue-800 space-y-1">
+                      <li>• Тест на внимание (TCP)</li>
+                      <li>• Тест на самоконтроль (Go/No-Go)</li>
+                      <li>• Тест на память</li>
+                      <li>• Персональный отчет с рекомендациями</li>
+                      <li>• Отправка результатов на email</li>
+                    </ul>
                   </div>
                   
                   <Button 
-                    type="submit" 
-                    className="w-full" 
-                    disabled={isVerifying || !allChecked}
+                    onClick={() => navigate('/payment')} 
+                    className="w-full"
                     size="lg"
+                    disabled={!allChecked}
                   >
-                    {isVerifying ? 'Проверка...' : 'Применить промокод'}
+                    Перейти к оплате
                   </Button>
-                </form>
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-                <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                  <p className="text-sm text-gray-600">
-                    <strong>Примечание:</strong> Промокод предоставляет бесплатный доступ к тестированию. 
-                    Если у вас нет промокода, вы можете приобрести доступ через оплату.
-                  </p>
-                </div>
+            {/* Вкладка промокода */}
+            <TabsContent value="promo">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Gift className="h-5 w-5" />
+                    Промокод
+                  </CardTitle>
+                  <CardDescription>
+                    Если у вас есть промокод, введите его ниже
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handlePromoCodeSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="promo-code">Промокод</Label>
+                      <Input
+                        id="promo-code"
+                        type="text"
+                        placeholder="Введите промокод"
+                        value={promoCode}
+                        onChange={(e) => setPromoCode(e.target.value)}
+                        disabled={isVerifying}
+                      />
+                    </div>
+                    
+                    <Button 
+                      type="submit" 
+                      className="w-full" 
+                      disabled={isVerifying || !allChecked}
+                      size="lg"
+                    >
+                      {isVerifying ? 'Проверка...' : 'Применить промокод'}
+                    </Button>
+                  </form>
+
+                  <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                    <p className="text-sm text-gray-600">
+                      <strong>Примечание:</strong> Промокод предоставляет бесплатный доступ к тестированию. 
+                      Если у вас нет промокода, вы можете приобрести доступ через оплату.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+
+          {/* Согласие */}
+          <div className="mt-8">
+            <Card>
+              <CardHeader>
+                <CardTitle>Согласие на обработку персональных данных</CardTitle>
+                <CardDescription>
+                  Нажимая кнопку "Оплатить" или "Применить промокод", я, как Заказчик (родитель или законный представитель школьника), подтверждаю, что:
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {consentPoints.map((point, index) => (
+                  <div key={index} className="flex items-start space-x-3">
+                    <Checkbox
+                      id={`consent-${index}`}
+                      checked={checkedState[index]}
+                      onCheckedChange={() => handleCheckboxChange(index)}
+                    />
+                    <Label htmlFor={`consent-${index}`} className="text-sm font-normal text-muted-foreground">
+                      {point.replace(/\*\*/g, '')}
+                    </Label>
+                  </div>
+                ))}
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
+          </div>
 
-        {/* Согласие */}
-        <div className="mt-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Согласие на обработку персональных данных</CardTitle>
-              <CardDescription>
-                Нажимая кнопку "Оплатить" или "Применить промокод", я, как Заказчик (родитель или законный представитель школьника), подтверждаю, что:
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {consentPoints.map((point, index) => (
-                <div key={index} className="flex items-start space-x-3">
-                  <Checkbox
-                    id={`consent-${index}`}
-                    checked={checkedState[index]}
-                    onCheckedChange={() => handleCheckboxChange(index)}
-                  />
-                  <Label htmlFor={`consent-${index}`} className="text-sm font-normal text-muted-foreground">
-                    {point.replace(/\*\*/g, '')}
-                  </Label>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+          {/* Дополнительная информация */}
+          <div className="mt-8 text-center">
+            <p className="text-sm text-muted-foreground">
+              Есть вопросы? Свяжитесь с нами по email: support@neurocheck.ru
+            </p>
+          </div>
         </div>
-
-        {/* Дополнительная информация */}
-        <div className="mt-8 text-center">
-          <p className="text-sm text-muted-foreground">
-            Есть вопросы? Свяжитесь с нами по email: support@neurocheck.ru
-          </p>
-        </div>
-
-        <Footer />
-      </div>
+      </main>
+      <Footer />
     </div>
   );
 }
