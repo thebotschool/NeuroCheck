@@ -2,6 +2,7 @@ import React from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import Footer from "@/components/Footer";
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -102,14 +103,7 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="text-center text-gray-500 text-sm mt-16">
-        <p>© 2025 NeuroCheck. Все права защищены.</p>
-        <div className="mt-4 text-center text-sm text-muted-foreground">
-          <Link to="/privacy" className="underline">Политика обработки персональных данных</Link>
-          <span className="mx-2">|</span>
-          <Link to="/offer" className="underline">Публичная оферта</Link>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

@@ -6,7 +6,7 @@ const ExampleReportPage = () => {
   const [markdown, setMarkdown] = useState('');
 
   useEffect(() => {
-    fetch('/NeuroCheck_Report.markdown')
+    fetch('/NeuroCheck_Report.md')
       .then((response) => response.text())
       .then((text) => setMarkdown(text));
   }, []);

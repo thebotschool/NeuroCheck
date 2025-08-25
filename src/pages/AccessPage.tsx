@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { CreditCard, Gift, ArrowLeft } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import Footer from '@/components/Footer';
 
 const consentPoints = [
   'Добровольно предоставляю ИП Кунявский Юрий (далее — Оператор) персональные данные (email, возраст школьника, результаты скрининга) для предоставления услуги **NeuroCheck — цифровое исследование учебных функций школьника**, включая проведение скрининга, формирование отчёта и отправку рекомендаций.',
@@ -295,11 +296,7 @@ export default function AccessPage() {
           </p>
         </div>
 
-        <div className="mt-8 text-center text-sm text-muted-foreground">
-          <Link to="/privacy" className="underline">Политика обработки персональных данных</Link>
-          <span className="mx-2">|</span>
-          <Link to="/offer" className="underline">Публичная оферта</Link>
-        </div>
+        <Footer />
       </div>
     </div>
   );
