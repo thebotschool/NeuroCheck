@@ -27,20 +27,7 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     return res.status(405).end('Method Not Allowed');
   }
 
-  // --- Basic Auth --- //
-  const authHeader = req.headers.authorization;
-  const yookassaUser = process.env.YOOKASSA_WEBHOOK_USER;
-  const yookassaPassword = process.env.YOOKASSA_WEBHOOK_PASSWORD;
-
-  if (yookassaUser && yookassaPassword) {
-    if (!authHeader) {
-      return res.status(401).send('Authorization header missing');
-    }
-    const expectedAuth = `Basic ${Buffer.from(`${yookassaUser}:${yookassaPassword}`).toString('base64')}`;
-    if (authHeader !== expectedAuth) {
-      return res.status(401).send('Invalid credentials');
-    }
-  }
+  
 
   try {
     const rawBody = await readRawBody(req);

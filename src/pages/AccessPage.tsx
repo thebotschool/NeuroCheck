@@ -210,7 +210,7 @@ export default function AccessPage() {
                     Оплата тестирования
                   </CardTitle>
                   <CardDescription>
-                    Стоимость: 500 ₽ • Время прохождения: ~15 минут
+                    Стоимость: 850 ₽ • Время прохождения: ~15 минут
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">

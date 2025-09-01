@@ -1,71 +1,51 @@
-import React, { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 export const PaymentPage = () => {
   const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const yookassaStylesheet = document.createElement('link');
-    yookassaStylesheet.rel = 'stylesheet';
-    yookassaStylesheet.href = 'https://yookassa.ru/integration/simplepay/css/yookassa_construct_form.css?v=1.26.0';
-    document.head.appendChild(yookassaStylesheet);
+  const handlePay = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/create-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
 
-    const yookassaScript = document.createElement('script');
-    yookassaScript.src = 'https://yookassa.ru/integration/simplepay/js/yookassa_construct_form.js?v=1.26.0';
-    yookassaScript.async = true;
-    document.body.appendChild(yookassaScript);
-
-    return () => {
-      document.head.removeChild(yookassaStylesheet);
-      document.body.removeChild(yookassaScript);
-    };
-  }, []);
-
-  const successURL = `https://${import.meta.env.VITE_PUBLIC_DOMAIN}/success`;
+      const data = await response.json();
+      if (data.confirmation_url) {
+        window.location.href = data.confirmation_url;
+      } else {
+        alert('Ошибка при создании платежа');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Ошибка');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
         <h2 className="text-2xl font-bold text-center text-gray-900">Оплата тестирования</h2>
-        <form className="yoomoney-payment-form" action="https://yookassa.ru/integration/simplepay/payment" method="post" acceptCharset="utf-8">
-          <div className="ym-products">
-            <div className="ym-block-title ym-products-title">Товары</div>
-            <div className="ym-product">
-              <div className="ym-product-line">
-                <span className="ym-product-description"><span className="ym-product-count">1×</span>Цифровое исследование учебных функций</span>
-                <span className="ym-product-price" data-price="850" data-id="420" data-count="1">850,00&nbsp;₽</span>
-              </div>
-              <input disabled type="hidden" name="text" value="Цифровое исследование учебных функций" />
-              <input disabled type="hidden" name="price" value="850" />
-              <input disabled type="hidden" name="quantity" value="1" />
-              <input disabled type="hidden" name="paymentSubjectType" value="commodity" />
-              <input disabled type="hidden" name="paymentMethodType" value="full_prepayment" />
-              <input disabled type="hidden" name="tax" value="1" />
-            </div>
-          </div>
-          <input value="" type="hidden" name="ym_merchant_receipt" />
-          <div className="ym-customer-info">
-            <div className="ym-block-title">О покупателе</div>
-            <input name="cps_email" className="ym-input" placeholder="Email" type="text" value={email} onChange={(e) => setEmail(e.target.value)} />
-          </div>
-          <div className="ym-hidden-inputs">
-            <input type="hidden" name="metadata[email]" value={email} />
-          </div>
-          <input name="customerNumber" type="hidden" value="Покупка исследования учебных функций" />
-          <div className="ym-payment-btn-block ym-before-line ym-align-space-between">
-            <div className="ym-input-icon-rub ym-display-none">
-              <input name="sum" placeholder="0.00" className="ym-input ym-sum-input ym-required-input" type="number" step="any" value="1000" />
-            </div>
-            <button data-text="Пройти тестирование" className="ym-btn-pay ym-result-price">
-              <span className="ym-text-crop">Пройти тестирование</span> <span className="ym-price-output">850,00&nbsp;₽</span>
-            </button>
-            <img src="https://yookassa.ru/integration/simplepay/img/iokassa-gray.svg?v=1.26.0" className="ym-logo" width="114" height="27" alt="ЮKassa" />
-          </div>
-          <input name="shopId" type="hidden" value="1149840" />
-          <input name="successURL" type="hidden" value={successURL} />
-        </form>
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Введите email"
+          className="w-full p-2 border border-gray-300 rounded"
+        />
+        <button
+          onClick={handlePay}
+          className="w-full bg-black text-white py-2 rounded"
+          disabled={loading || !email}
+        >
+          {loading ? 'Создание оплаты...' : 'Перейти к оплате'}
+        </button>
       </div>
     </div>
   );
 };
-
-export default PaymentPage;
