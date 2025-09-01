@@ -22,7 +22,6 @@ const consentPoints = [
 export default function AccessPage() {
   const navigate = useNavigate();
   const [promoCode, setPromoCode] = useState('');
-  const [email, setEmail] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
   const [checkedState, setCheckedState] = useState(new Array(consentPoints.length).fill(false));
 
@@ -38,10 +37,10 @@ export default function AccessPage() {
   const handlePromoCodeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!promoCode.trim() || !email.trim()) {
+    if (!promoCode.trim()) {
       toast({
         title: 'Ошибка',
-        description: 'Введите почту и промокод',
+        description: 'Пожалуйста, введите промокод',
         variant: 'destructive',
       });
       return;
@@ -50,113 +49,34 @@ export default function AccessPage() {
     setIsVerifying(true);
 
     try {
-      // В dev режиме проверяем напрямую через Supabase
-      if (import.meta.env.DEV) {
-        const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-        const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-        
-        const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/tests?token=eq.${encodeURIComponent(promoCode.trim())}&select=id,used,is_completed,expires_at`,
-          {
-            headers: {
-              apikey: SUPABASE_ANON_KEY,
-              Authorization: `Bearer ${SUPABASE_ANON_KEY}`
-            }
-          }
-        );
-        
-        if (!response.ok) {
-          throw new Error('Database query failed');
-        }
-        
-        const rows = await response.json();
-        const row = rows[0];
-        
-        let data;
-        if (!row) {
-          data = { ok: false, error: 'not_found' };
-        } else if (row.used || row.is_completed) {
-          data = { ok: false, error: 'already_used' };
-        } else if (row.expires_at && new Date(row.expires_at) < new Date()) {
-          data = { ok: false, error: 'expired' };
-        } else {
-          data = { ok: true, testId: row.id };
-        }
-        
-        if (data.ok) {
-          // Update email in Supabase
-          await fetch(
-            `${SUPABASE_URL}/rest/v1/tests?id=eq.${data.testId}`,
-            {
-              method: 'PATCH',
-              headers: {
-                apikey: SUPABASE_ANON_KEY,
-                Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ email: email.trim() }),
-            }
-          );
-          navigate(`/test?token=${encodeURIComponent(promoCode.trim())}`);
-          return;
-        } else {
-          let errorMessage = 'Неверный промокод';
-          
-          if (data.error === 'not_found') {
-            errorMessage = 'Промокод не найден';
-          } else if (data.error === 'already_used') {
-            errorMessage = 'Промокод уже использован';
-          } else if (data.error === 'expired') {
-            errorMessage = 'Промокод истек';
-          }
-
-          toast({
-            title: 'Ошибка',
-            description: errorMessage,
-            variant: 'destructive',
-          });
-          return;
-        }
-      }
-      
-      // Проверяем промокод (токен) через API (для продакшена)
-      const response = await fetch(`/api/verify-token` , {
+      const response = await fetch('/api/consume-promo', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ token: promoCode.trim(), email: email.trim() }),
+        body: JSON.stringify({ promoCode: promoCode.trim() }),
       });
+
       const data = await response.json();
 
       if (data.ok) {
-        // Промокод валидный, переходим к тестированию
-        navigate(`/test?token=${encodeURIComponent(promoCode.trim())}`);
-      } else {
-        // Промокод невалидный
-        let errorMessage = 'Неверный промокод';
-        
-        if (data.error === 'not_found') {
-          errorMessage = 'Промокод не найден';
-        } else if (data.error === 'already_used') {
-          errorMessage = 'Промокод уже использован';
-        } else if (data.error === 'expired') {
-          errorMessage = 'Промокод истек';
-        } else if (data.error === 'invalid_time') {
-          errorMessage = data.message;
-        }
-
         toast({
-          title: 'Ошибка',
-          description: errorMessage,
+          title: 'Успешно!',
+          description: 'Промокод принят.',
+        });
+        navigate(`/test?token=${data.token}`);
+      } else {
+        toast({
+          title: 'Ошибка промокода',
+          description: data.error || 'Не удалось применить промокод.',
           variant: 'destructive',
         });
       }
     } catch (error) {
-      console.error('Error verifying promo code:', error);
+      console.error('Error consuming promo code:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось проверить промокод. Попробуйте еще раз.',
+        title: 'Сетевая ошибка',
+        description: 'Не удалось связаться с сервером. Попробуйте еще раз.',
         variant: 'destructive',
       });
     } finally {
@@ -251,18 +171,6 @@ export default function AccessPage() {
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handlePromoCodeSubmit} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Электронная почта</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="Введите вашу почту"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        disabled={isVerifying}
-                        required
-                      />
-                    </div>
                     <div className="space-y-2">
                       <Label htmlFor="promo-code">Промокод</Label>
                       <Input
