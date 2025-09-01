@@ -10,7 +10,7 @@ export default async function handler(req, res) {
     const { quantity, adminKey } = req.body;
 
     // 1. Validate Admin Key
-    const expectedAdminKey = process.env.VITE_ADMIN_KEY;
+    const expectedAdminKey = process.env.ADMIN_KEY;
 
     // Securely log key details for debugging
     console.log('Admin Key Validation:');
