@@ -23,6 +23,24 @@ export default async function handler(req, res) {
     },
     description: 'Цифровое исследование учебных функций',
     metadata: { email },
+    receipt: {
+      customer: {
+        email: email
+      },
+      items: [
+        {
+          description: 'Цифровое исследование учебных функций',
+          quantity: '1.00',
+          amount: {
+            value: '850.00',
+            currency: 'RUB'
+          },
+          vat_code: '1',
+          payment_mode: 'full_prepayment',
+          payment_subject: 'commodity'
+        }
+      ]
+    }
   };
 
   try {
