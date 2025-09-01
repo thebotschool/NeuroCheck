@@ -39,6 +39,7 @@ export default async (req, res) => {
     const { object: payment } = payload;
     const paymentId = payment.id;
     let email = payment.metadata?.email || payment.customer?.email;
+    const clientId = payment.metadata?.clientId;
 
     if (!email) {
       console.warn(`Email not found in metadata or customer info for payment ${paymentId}.`);
@@ -86,6 +87,7 @@ export default async (req, res) => {
         payment_id: paymentId,
         expires_at: expiresAt ? expiresAt.toISOString() : null,
         used: false,
+        client_id: clientId,
       })
       .select()
       .single();

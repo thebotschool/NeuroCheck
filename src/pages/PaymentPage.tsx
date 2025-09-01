@@ -5,37 +5,40 @@ export const PaymentPage = () => {
   const [loading, setLoading] = useState(false);
 
   const handlePay = async () => {
-  setLoading(true);
-  try {
-    const response = await fetch('/api/create-payment', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email }),
-    });
+    setLoading(true);
+    try {
+      const clientId = crypto.randomUUID();
+      localStorage.setItem('payment_client_id', clientId);
 
-    const contentType = response.headers.get('content-type');
-    const data = contentType?.includes('application/json')
-      ? await response.json()
-      : await response.text();
+      const response = await fetch('/api/create-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, clientId }),
+      });
 
-    if (!response.ok) {
-      console.error('Ошибка от сервера:', data);
-      alert('Ошибка при создании платежа');
-      return;
+      const contentType = response.headers.get('content-type');
+      const data = contentType?.includes('application/json')
+        ? await response.json()
+        : await response.text();
+
+      if (!response.ok) {
+        console.error('Ошибка от сервера:', data);
+        alert('Ошибка при создании платежа');
+        return;
+      }
+
+      if (data.confirmation_url) {
+        window.location.href = data.confirmation_url;
+      } else {
+        alert('Не удалось получить ссылку на оплату');
+      }
+    } catch (e) {
+      console.error('Ошибка запроса:', e);
+      alert('Ошибка при создании оплаты');
+    } finally {
+      setLoading(false);
     }
-
-    if (data.confirmation_url) {
-      window.location.href = data.confirmation_url;
-    } else {
-      alert('Не удалось получить ссылку на оплату');
-    }
-  } catch (e) {
-    console.error('Ошибка запроса:', e);
-    alert('Ошибка при создании оплаты');
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">

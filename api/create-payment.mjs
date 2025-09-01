@@ -3,9 +3,10 @@ import { randomUUID } from 'crypto';
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end('Method Not Allowed');
 
-  const { email } = req.body;
+  const { email, clientId } = req.body;
 
   if (!email) return res.status(400).json({ error: 'Email is required' });
+  if (!clientId) return res.status(400).json({ error: 'clientId is required' });
 
   const shopId = process.env.YOOKASSA_SHOP_ID;
   const secretKey = process.env.YOOKASSA_SECRET_KEY;
@@ -19,10 +20,10 @@ export default async function handler(req, res) {
     capture: true,
     confirmation: {
       type: 'redirect',
-      return_url: 'https://www.neurocheck.ru/successpage',
+      return_url: 'https://www.neurocheck.ru/success',
     },
     description: 'Цифровое исследование учебных функций',
-    metadata: { email },
+    metadata: { email, clientId },
     receipt: {
       customer: {
         email: email
