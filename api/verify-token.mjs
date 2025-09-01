@@ -1,6 +1,6 @@
 // api/verify-token.mjs
 // EDGE + Supabase REST. Проверяет токен и возвращает понятный JSON.
-// GET /api/verify-token?token=...   (можно и POST с { token })
+// GET /api/verify-token?token=...   (можно и POST с { token, email })
 
 import { getAdminClient } from './_lib/supabaseServer';
 
@@ -29,20 +29,16 @@ export default async function handler(req) {
     }
 
     if (!token) return json({ ok: false, error: 'token_required' }, 400);
-    if (req.method === 'POST' && !email) return json({ ok: false, error: 'email_required' }, 400);
-
-    console.log('Verifying token:', token);
+    // Email is only required for the update operation, not for the initial check in NeuroCheck
+    // if (req.method === 'POST' && !email) return json({ ok: false, error: 'email_required' }, 400);
 
     const supabase = getAdminClient();
-    console.log('Supabase client created');
 
-    // Находим запись по токену
+    // Find record by token
     const { data: rows, error } = await supabase
       .from('tests')
-      .select('id,used,is_completed,expires_at,started_at')
+      .select('id,used,is_completed,expires_at,started_at,email') // MODIFIED: added email
       .eq('token', token);
-
-    console.log('Supabase query executed');
 
     if (error) {
       console.error('Supabase select failed:', error);
@@ -52,7 +48,7 @@ export default async function handler(req) {
     const row = rows?.[0];
     if (!row) return json({ ok: false, error: 'not_found' }, 200);
 
-    // Простые проверки валидности
+    // Simple validity checks
     if (row.used || row.is_completed) {
       return json({ ok: false, error: 'already_used', testId: row.id }, 200);
     }
@@ -61,8 +57,9 @@ export default async function handler(req) {
       return json({ ok: false, error: 'expired', testId: row.id, expires_at: row.expires_at }, 200);
     }
 
-    // Если email передан, обновляем запись
-    if (email) {
+    // If email is provided via POST, update the record
+    if (req.method === 'POST' && email) {
+       if (!email) return json({ ok: false, error: 'email_required' }, 400);
       const { error: updateError } = await supabase
         .from('tests')
         .update({ email })
@@ -72,11 +69,12 @@ export default async function handler(req) {
         console.error('Supabase update failed:', updateError);
         return json({ ok: false, error: 'update_failed', details: updateError }, 500);
       }
+      // To ensure the returned email is the one we just set
+      row.email = email;
     }
 
-    // ⚠️ Ограничение 06:00–12:00 по местному времени пока НЕ enforced (оставлено на будущее),
-    // чтобы не мешать тестированию.
-    return json({ ok: true, testId: row.id }, 200);
+    return json({ ok: true, testId: row.id, email: row.email }, 200); // MODIFIED: added email
+
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'unknown';
     return json({ ok: false, error: `verify-token failed: ${msg}` }, 500);
