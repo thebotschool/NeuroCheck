@@ -1,6 +1,12 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { randomUUID } from 'crypto';
 
+type YookassaPaymentResponse = {
+  confirmation: {
+    confirmation_url: string;
+  };
+};
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).end('Method Not Allowed');
 
@@ -42,7 +48,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(response.status).json({ error: errorBody });
     }
 
-    const payment = await response.json();
+    const payment = (await response.json()) as YookassaPaymentResponse;
     return res.status(200).json({ confirmation_url: payment.confirmation.confirmation_url });
   } catch (error) {
     console.error(error);
