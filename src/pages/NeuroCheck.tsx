@@ -184,3 +184,4 @@ const NeuroCheck = () => {
 
   // ... (rest of the rendering logic)
 };
+export default NeuroCheck;
