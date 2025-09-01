@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Copy } from 'lucide-react';
 
 type TokenState = 'verifying' | 'valid' | 'invalid' | 'requires_email';
 
@@ -327,13 +328,29 @@ const NeuroCheck = () => {
         );
       }
     } else {
+      const testUrl = window.location.href;
+      const copyToClipboard = () => {
+        navigator.clipboard.writeText(testUrl).then(() => {
+          toast({ title: 'Ссылка скопирована!' });
+        });
+      };
+
       return (
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center max-w-md">
+        <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
+          <div className="text-center max-w-md p-8 bg-white rounded-lg shadow-md">
             <h2 className="text-2xl font-bold">Тестирование временно недоступно</h2>
             <p className="mt-4 text-muted-foreground">
-              Мы открываем скрининг только с утра — с 6 до 12 часов. В это время дети бодрее, внимание свежее, и результаты получаются честнее и полезнее. Так мы заботимся о том, чтобы отчёт действительно помог
+              Мы открываем скрининг только с утра — с 6 до 12 часов по вашему местному времени. В это время дети бодрее, внимание свежее, и результаты получаются честнее.
             </p>
+            <div className="mt-6 p-4 bg-gray-100 rounded-lg">
+              <p className="font-semibold text-gray-800">Пожалуйста, сохраните вашу уникальную ссылку на тест и вернитесь в указанное время:</p>
+              <div className="mt-2 flex items-center gap-2">
+                <Input type="text" readOnly value={testUrl} className="flex-1" />
+                <Button variant="outline" size="icon" onClick={copyToClipboard}>
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
             {devMode && (
               <div className="mt-6">
                 <Button onClick={() => setTimeBypassed(true)}>

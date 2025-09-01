@@ -4,11 +4,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
-import { Copy, Gift, Eye, EyeOff, LockKeyhole, Calendar as CalendarIcon } from 'lucide-react';
+import { Copy, Gift, Eye, EyeOff, LockKeyhole, Calendar as CalendarIcon, Database } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { supabase } from '@/integrations/supabase/client';
+import { DbTable } from '@/components/admin/DbTable';
 
 const SESSION_STORAGE_KEY = 'neurocheck-admin-auth';
 
@@ -28,6 +30,12 @@ export default function AdminPage() {
   const [showAdminKey, setShowAdminKey] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [generatedPromos, setGeneratedPromos] = useState<string[]>([]);
+
+  // DB Viewer State
+  const [testsData, setTestsData] = useState<Record<string, any>[]>([]);
+  const [promoCodesData, setPromoCodesData] = useState<Record<string, any>[]>([]);
+  const [isFetching, setIsFetching] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,6 +92,26 @@ export default function AdminPage() {
     }
   };
 
+  const fetchTableData = async (tableName: 'tests' | 'promo_codes') => {
+    setIsFetching(true);
+    setFetchError(null);
+    try {
+      const { data, error } = await supabase.from(tableName).select('*');
+      if (error) throw error;
+      if (tableName === 'tests') {
+        setTestsData(data || []);
+      } else {
+        setPromoCodesData(data || []);
+      }
+      toast({ title: 'Успешно', description: `Данные из таблицы ${tableName} загружены` });
+    } catch (error: any) {
+      setFetchError(`Ошибка при загрузке данных из таблицы ${tableName}: ${error.message}`);
+      toast({ title: 'Ошибка', description: `Не удалось загрузить данные из таблицы ${tableName}`, variant: 'destructive' });
+    } finally {
+      setIsFetching(false);
+    }
+  };
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text).then(() => {
       toast({ title: 'Скопировано', description: 'Промокод скопирован в буфер обмена' });
@@ -130,10 +158,10 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 to-accent/5 p-4">
-      <div className="max-w-2xl mx-auto">
-        <div className="text-center mb-8">
+      <div className="max-w-4xl mx-auto space-y-8">
+        <div className="text-center">
           <h1 className="text-3xl font-bold mb-2">Админ панель</h1>
-          <p className="text-muted-foreground">Создание промокодов для доступа к тестированию</p>
+          <p className="text-muted-foreground">Создание промокодов и просмотр базы данных</p>
         </div>
 
         <Card>
@@ -206,6 +234,29 @@ export default function AdminPage() {
             )}
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><Database className="h-5 w-5" />Просмотр базы данных</CardTitle>
+            <CardDescription>Просмотр таблиц 'tests' и 'promo_codes' из базы данных.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex gap-4">
+              <Button onClick={() => fetchTableData('tests')} disabled={isFetching}>
+                {isFetching ? 'Загрузка...' : 'Загрузить таблицу Tests'}
+              </Button>
+              <Button onClick={() => fetchTableData('promo_codes')} disabled={isFetching}>
+                {isFetching ? 'Загрузка...' : 'Загрузить таблицу Promo Codes'}
+              </Button>
+            </div>
+            {fetchError && (
+              <p className="text-sm text-red-500">{fetchError}</p>
+            )}
+            {testsData.length > 0 && <DbTable title="Tests" data={testsData} />}
+            {promoCodesData.length > 0 && <DbTable title="Promo Codes" data={promoCodesData} />}
+          </CardContent>
+        </Card>
+
       </div>
     </div>
   );
