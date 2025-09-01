@@ -1,4 +1,4 @@
-import { getAdminClient } from './_lib/supabaseServer';
+import { getAdminClient } from './_lib/supabaseServer.mjs';
 import { randomUUID } from 'crypto';
 
 export default async function handler(req, res) {

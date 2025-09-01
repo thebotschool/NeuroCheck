@@ -1,6 +1,6 @@
 import { Buffer } from 'buffer';
-import { getAdminClient } from './_lib/supabaseServer';
-import { sendAccessEmail } from './_lib/resend';
+import { getAdminClient } from './_lib/supabaseServer.mjs';
+import { sendAccessEmail } from './_lib/resend.mjs';
 import { randomUUID } from 'crypto';
 
 const USE_UNIFIED_TABLE = false; // Set to true to use a single 'orders' table

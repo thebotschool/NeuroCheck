@@ -2,7 +2,7 @@
 // EDGE + Supabase REST. Проверяет токен и возвращает понятный JSON.
 // GET /api/verify-token?token=...   (можно и POST с { token, email })
 
-import { getAdminClient } from './_lib/supabaseServer';
+import { getAdminClient } from './_lib/supabaseServer.mjs';
 
 export const config = { runtime: 'edge' };
 

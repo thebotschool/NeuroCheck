@@ -1,5 +1,5 @@
 // api/get-token-by-client-id.mjs
-import { getAdminClient } from './_lib/supabaseServer';
+import { getAdminClient } from './_lib/supabaseServer.mjs';
 
 export const config = { runtime: 'edge' };
 

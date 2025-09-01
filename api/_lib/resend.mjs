@@ -8,7 +8,7 @@ if (!resendApiKey) {
 
 const resend = new Resend(resendApiKey);
 
-export const sendAccessEmail = async (email: string, accessUrl: string) => {
+export const sendAccessEmail = async (email, accessUrl) => {
   try {
     await resend.emails.send({
       from: `NeuroCheck <${process.env.MAIL_FROM}>`,

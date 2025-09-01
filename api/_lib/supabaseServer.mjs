@@ -1,8 +1,8 @@
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';
 
-let adminClient: SupabaseClient | null = null;
+let adminClient = null;
 
-export function getAdminClient(): SupabaseClient {
+export function getAdminClient() {
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) {
