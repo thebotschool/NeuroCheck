@@ -23,6 +23,14 @@ export const DbTable: React.FC<DbTableProps> = ({ title, data }) => {
 
   const headers = Object.keys(data[0]);
 
+  const renderCell = (cellData: any) => {
+    if (cellData === null) return 'NULL';
+    if (typeof cellData === 'object') {
+      return <pre className="whitespace-pre-wrap text-xs">{JSON.stringify(cellData, null, 2)}</pre>;
+    }
+    return cellData.toString();
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -43,9 +51,7 @@ export const DbTable: React.FC<DbTableProps> = ({ title, data }) => {
                 <TableRow key={rowIndex}>
                   {headers.map((header) => (
                     <TableCell key={header}>
-                      {typeof row[header] === 'boolean'
-                        ? row[header].toString()
-                        : row[header]}
+                      {renderCell(row[header])}
                     </TableCell>
                   ))}
                 </TableRow>
