@@ -26,20 +26,27 @@ export default async (req, res) => {
     return res.status(405).end('Method Not Allowed');
   }
 
-  
+  console.log('Yookassa webhook received');
 
   try {
     const rawBody = await readRawBody(req);
+    console.log('Webhook raw body:', rawBody);
+
     const payload = JSON.parse(rawBody);
+    console.log('Webhook payload:', payload);
 
     if (payload.event !== 'payment.succeeded') {
+      console.log(`Event ignored: ${payload.event}`);
       return res.status(200).send('Event ignored');
     }
 
+    console.log('Processing payment.succeeded event');
     const { object: payment } = payload;
     const paymentId = payment.id;
     let email = payment.metadata?.email || payment.customer?.email;
     const clientId = payment.metadata?.clientId;
+
+    console.log(`Payment ID: ${paymentId}, Email: ${email}, Client ID: ${clientId}`);
 
     if (!email) {
       console.warn(`Email not found in metadata or customer info for payment ${paymentId}.`);
@@ -47,14 +54,13 @@ export default async (req, res) => {
     }
 
     const supabase = getAdminClient();
+    console.log('Supabase client created');
 
     if (USE_UNIFIED_TABLE) {
       // Logic for a single 'orders' table (not implemented as per current schema)
-      // const { data, error } = await supabase.from('orders').update({ status: 'paid' }).eq('payment_id', paymentId).select().single();
-      // if (error) throw error;
     } else {
-      // Logic for separate 'payments' and 'tests' tables
-      const { error: paymentError } = await supabase.from('payments').upsert({
+      console.log('Upserting payment record...');
+      const paymentData = {
         payment_id: paymentId,
         status: payment.status,
         amount: payment.amount.value,
@@ -63,9 +69,16 @@ export default async (req, res) => {
         email: email,
         metadata: payment.metadata,
         updated_at: new Date(),
-      }, { onConflict: 'payment_id' });
+      };
+      console.log('Payment data to upsert:', paymentData);
 
-      if (paymentError) throw paymentError;
+      const { error: paymentError } = await supabase.from('payments').upsert(paymentData, { onConflict: 'payment_id' });
+
+      if (paymentError) {
+        console.error('Error upserting payment:', paymentError);
+        throw paymentError;
+      }
+      console.log('Payment record upserted successfully');
     }
 
     const token = `${randomUUID()}-${Date.now()}`;
@@ -79,25 +92,35 @@ export default async (req, res) => {
       }
     }
 
+    console.log('Inserting test record...');
+    const testData = {
+      email,
+      token,
+      payment_id: paymentId,
+      expires_at: expiresAt ? expiresAt.toISOString() : null,
+      used: false,
+      client_id: clientId,
+    };
+    console.log('Test data to insert:', testData);
+
     const { data: test, error: testError } = await supabase
       .from('tests')
-      .insert({
-        email,
-        token,
-        payment_id: paymentId,
-        expires_at: expiresAt ? expiresAt.toISOString() : null,
-        used: false,
-        client_id: clientId,
-      })
+      .insert(testData)
       .select()
       .single();
 
-    if (testError) throw testError;
+    if (testError) {
+      console.error('Error inserting test record:', testError);
+      throw testError;
+    }
+    console.log('Test record inserted successfully:', test);
 
     const siteUrl = process.env.SITE_URL || 'http://localhost:5173';
     const accessUrl = `${siteUrl}/test?token=${token}`;
 
+    console.log(`Sending access email to ${email} with URL: ${accessUrl}`);
     await sendAccessEmail(email, accessUrl);
+    console.log('Access email sent');
 
     return res.status(200).json({ ok: true, testId: test.id, email });
 
