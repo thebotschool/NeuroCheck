@@ -5,27 +5,37 @@ export const PaymentPage = () => {
   const [loading, setLoading] = useState(false);
 
   const handlePay = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch('/api/create-payment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
+  setLoading(true);
+  try {
+    const response = await fetch('/api/create-payment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
 
-      const data = await response.json();
-      if (data.confirmation_url) {
-        window.location.href = data.confirmation_url;
-      } else {
-        alert('Ошибка при создании платежа');
-      }
-    } catch (e) {
-      console.error(e);
-      alert('Ошибка');
-    } finally {
-      setLoading(false);
+    const contentType = response.headers.get('content-type');
+    const data = contentType?.includes('application/json')
+      ? await response.json()
+      : await response.text();
+
+    if (!response.ok) {
+      console.error('Ошибка от сервера:', data);
+      alert('Ошибка при создании платежа');
+      return;
     }
-  };
+
+    if (data.confirmation_url) {
+      window.location.href = data.confirmation_url;
+    } else {
+      alert('Не удалось получить ссылку на оплату');
+    }
+  } catch (e) {
+    console.error('Ошибка запроса:', e);
+    alert('Ошибка при создании оплаты');
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">

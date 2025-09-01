@@ -1,4 +1,3 @@
-
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { randomUUID } from 'crypto';
 
@@ -21,7 +20,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     capture: true,
     confirmation: {
       type: 'redirect',
-      return_url: 'https://www.neurocheck.ru/success',
+      return_url: 'https://www.neurocheck.ru/successpage',
     },
     description: 'Цифровое исследование учебных функций',
     metadata: { email },
@@ -39,12 +38,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
     if (!response.ok) {
-      const errorBody = await response.text();
+      const errorBody = await response.text(); // вот здесь вторая ошибка 👇
       return res.status(response.status).json({ error: errorBody });
     }
 
     const payment = await response.json();
-
     return res.status(200).json({ confirmation_url: payment.confirmation.confirmation_url });
   } catch (error) {
     console.error(error);
