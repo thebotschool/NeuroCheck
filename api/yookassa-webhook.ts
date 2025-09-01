@@ -82,9 +82,15 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     }
 
     const token = `${randomUUID()}-${Date.now()}`;
-    const tokenTtlHours = parseInt(process.env.TOKEN_TTL_HOURS || '24', 10);
-    const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + tokenTtlHours);
+    const tokenTtlHoursRaw = process.env.TOKEN_TTL_HOURS;
+    let expiresAt: Date | null = null;
+    if (tokenTtlHoursRaw) {
+      const tokenTtlHours = parseInt(tokenTtlHoursRaw, 10);
+      if (!isNaN(tokenTtlHours)) {
+        expiresAt = new Date();
+        expiresAt.setHours(expiresAt.getHours() + tokenTtlHours);
+      }
+    }
 
     const { data: test, error: testError } = await supabase
       .from('tests')
@@ -92,7 +98,7 @@ export default async (req: VercelRequest, res: VercelResponse) => {
         email,
         token,
         payment_id: paymentId,
-        expires_at: expiresAt.toISOString(),
+        expires_at: expiresAt ? expiresAt.toISOString() : null,
         used: false,
       })
       .select()
