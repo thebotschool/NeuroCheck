@@ -5,9 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 interface DbTableProps {
   title: string;
   data: Record<string, any>[];
+  excludeColumns?: string[];
+  actions?: (row: Record<string, any>) => React.ReactNode;
 }
 
-export const DbTable: React.FC<DbTableProps> = ({ title, data }) => {
+export const DbTable: React.FC<DbTableProps> = ({ title, data, excludeColumns = [], actions }) => {
   if (!data.length) {
     return (
       <Card>
@@ -21,7 +23,7 @@ export const DbTable: React.FC<DbTableProps> = ({ title, data }) => {
     );
   }
 
-  const headers = Object.keys(data[0]);
+  const headers = Object.keys(data[0]).filter(header => !excludeColumns.includes(header));
 
   const renderCell = (cellData: any) => {
     if (cellData === null) return 'NULL';
@@ -44,6 +46,7 @@ export const DbTable: React.FC<DbTableProps> = ({ title, data }) => {
                 {headers.map((header) => (
                   <TableHead key={header}>{header}</TableHead>
                 ))}
+                {actions && <TableHead>Actions</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -54,6 +57,7 @@ export const DbTable: React.FC<DbTableProps> = ({ title, data }) => {
                       {renderCell(row[header])}
                     </TableCell>
                   ))}
+                  {actions && <TableCell>{actions(row)}</TableCell>}
                 </TableRow>
               ))}
             </TableBody>

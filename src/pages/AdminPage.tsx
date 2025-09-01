@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { DbTable } from '@/components/admin/DbTable';
+import { ReportDownloader } from '@/components/admin/ReportDownloader';
 
 const SESSION_STORAGE_KEY = 'neurocheck-admin-auth';
 
@@ -100,8 +101,10 @@ export default function AdminPage() {
       if (error) throw error;
       if (tableName === 'tests') {
         setTestsData(data || []);
+        setPromoCodesData([]);
       } else {
         setPromoCodesData(data || []);
+        setTestsData([]);
       }
       toast({ title: 'Успешно', description: `Данные из таблицы ${tableName} загружены` });
     } catch (error: any) {
@@ -158,7 +161,7 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 to-accent/5 p-4">
-      <div className="max-w-4xl mx-auto space-y-8">
+      <div className="max-w-7xl mx-auto space-y-8">
         <div className="text-center">
           <h1 className="text-3xl font-bold mb-2">Админ панель</h1>
           <p className="text-muted-foreground">Создание промокодов и просмотр базы данных</p>
@@ -252,7 +255,14 @@ export default function AdminPage() {
             {fetchError && (
               <p className="text-sm text-red-500">{fetchError}</p>
             )}
-            {testsData.length > 0 && <DbTable title="Tests" data={testsData} />}
+            {testsData.length > 0 && 
+              <DbTable 
+                title="Tests" 
+                data={testsData} 
+                excludeColumns={['tcp_results', 'gonogo_results', 'memory_results']}
+                actions={(row) => <ReportDownloader test={row} />}
+              />
+            }
             {promoCodesData.length > 0 && <DbTable title="Promo Codes" data={promoCodesData} />}
           </CardContent>
         </Card>
