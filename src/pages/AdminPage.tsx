@@ -121,6 +121,13 @@ export default function AdminPage() {
     });
   };
 
+  const copyAllToClipboard = () => {
+    const allPromos = generatedPromos.join('\n');
+    navigator.clipboard.writeText(allPromos).then(() => {
+      toast({ title: 'Скопировано', description: 'Все промокоды скопированы в буфер обмена' });
+    });
+  };
+
   if (!isAuthenticated) {
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
@@ -222,7 +229,13 @@ export default function AdminPage() {
 
             {generatedPromos.length > 0 && (
               <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                <h4 className="font-semibold text-green-900 mb-2">Промокоды созданы!</h4>
+                <div className="flex justify-between items-center mb-2">
+                  <h4 className="font-semibold text-green-900">Промокоды созданы!</h4>
+                  <Button variant="ghost" size="sm" onClick={copyAllToClipboard}>
+                    <Copy className="h-4 w-4 mr-2" />
+                    Копировать все
+                  </Button>
+                </div>
                 <ul className="space-y-2">
                   {generatedPromos.map((promo) => (
                     <li key={promo} className="flex items-center gap-2">
