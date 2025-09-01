@@ -1,4 +1,3 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Buffer } from 'buffer';
 import { getAdminClient } from './_lib/supabaseServer';
 import { sendAccessEmail } from './_lib/resend';
@@ -6,7 +5,7 @@ import { randomUUID } from 'crypto';
 
 const USE_UNIFIED_TABLE = false; // Set to true to use a single 'orders' table
 
-const readRawBody = (req: VercelRequest): Promise<string> => {
+const readRawBody = (req) => {
   return new Promise((resolve, reject) => {
     let body = '';
     req.on('data', (chunk) => {
@@ -21,7 +20,7 @@ const readRawBody = (req: VercelRequest): Promise<string> => {
   });
 };
 
-export default async (req: VercelRequest, res: VercelResponse) => {
+export default async (req, res) => {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return res.status(405).end('Method Not Allowed');
@@ -70,7 +69,7 @@ export default async (req: VercelRequest, res: VercelResponse) => {
 
     const token = `${randomUUID()}-${Date.now()}`;
     const tokenTtlHoursRaw = process.env.TOKEN_TTL_HOURS;
-    let expiresAt: Date | null = null;
+    let expiresAt = null;
     if (tokenTtlHoursRaw) {
       const tokenTtlHours = parseInt(tokenTtlHoursRaw, 10);
       if (!isNaN(tokenTtlHours)) {

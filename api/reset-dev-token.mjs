@@ -1,14 +1,14 @@
-// api/reset-dev-token.ts
+// api/reset-dev-token.mjs
 export const config = { runtime: 'edge' };
 
-const J = (d:any,s=200)=>new Response(JSON.stringify(d),{status:s,headers:{'content-type':'application/json'}});
+const J = (d,s=200)=>new Response(JSON.stringify(d),{status:s,headers:{'content-type':'application/json'}});
 
-export default async function handler(req: Request): Promise<Response> {
+export default async function handler(req) {
   try {
     if (req.method !== 'POST') return J({ error:'method_not_allowed' }, 405);
 
     // body may be empty
-    let body:any=null; try { body = await req.json(); } catch {}
+    let body=null; try { body = await req.json(); } catch {}
 
     const DEV_BYPASS_TOKEN = (process.env.VITE_DEV_BYPASS_TOKEN ?? 'dev-token-123').toString();
     const token = (body?.token ?? DEV_BYPASS_TOKEN).toString().trim();
@@ -66,7 +66,7 @@ export default async function handler(req: Request): Promise<Response> {
       })
     });
     const patchedText = await patch.text().catch(()=>'(no text)');
-    let patched:any=null; try { patched = JSON.parse(patchedText); } catch {}
+    let patched=null; try { patched = JSON.parse(patchedText); } catch {}
     if (!patch.ok) return J({ ok:false, step:'patch', status:patch.status, body:patchedText }, 500);
 
     // Re-select for proof

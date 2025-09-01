@@ -1,4 +1,4 @@
-// api/verify-token.ts
+// api/verify-token.mjs
 // EDGE + Supabase REST. Проверяет токен и возвращает понятный JSON.
 // GET /api/verify-token?token=...   (можно и POST с { token })
 
@@ -6,10 +6,10 @@ import { getAdminClient } from './_lib/supabaseServer';
 
 export const config = { runtime: 'edge' };
 
-const json = (d: any, s = 200) =>
+const json = (d, s = 200) =>
   new Response(JSON.stringify(d), { status: s, headers: { 'content-type': 'application/json' } });
 
-export default async function handler(req: Request): Promise<Response> {
+export default async function handler(req) {
   try {
     let token = '';
     let email = '';
