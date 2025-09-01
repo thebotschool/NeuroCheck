@@ -1,3 +1,24 @@
+import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams, Link } from 'react-router-dom';
+import { UserDataStep } from '@/components/neuro/UserDataStep';
+import { TCPTest } from '@/components/neuro/TCPTest';
+import { GoNoGoTest } from '@/components/neuro/GoNoGoTest';
+import { VideoRestStep } from '@/components/neuro/VideoRestStep';
+import { MemoryTest } from '@/components/neuro/MemoryTest';
+import { ResultsStep } from '@/components/neuro/ResultsStep';
+import { useTestSession } from '@/hooks/useTestSession';
+import LoadingScreen from '@/components/neuro/LoadingScreen';
+import MobileBlocked from '@/components/neuro/MobileBlocked';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { TestStep, TCPResult, GoNoGoResult, MemoryResult } from '@/types/test';
+import { toast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+
+type TokenState = 'verifying' | 'valid' | 'invalid' | 'requires_email';
+
 const NeuroCheck = () => {
   const [searchParams] = useSearchParams();
   const [tokenState, setTokenState] = useState<TokenState>('verifying');
