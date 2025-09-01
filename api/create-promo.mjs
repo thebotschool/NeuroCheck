@@ -11,6 +11,13 @@ export default async function handler(req, res) {
 
     // 1. Validate Admin Key
     const expectedAdminKey = process.env.VITE_ADMIN_KEY;
+
+    // Securely log key details for debugging
+    console.log('Admin Key Validation:');
+    console.log(`  - Received Key Length: ${adminKey?.length || 0}`);
+    console.log(`  - Expected Key Length: ${expectedAdminKey?.length || 0}`);
+    console.log(`  - Keys Match: ${adminKey === expectedAdminKey}`);
+
     if (!expectedAdminKey || adminKey !== expectedAdminKey) {
       return res.status(403).json({ error: 'Invalid admin key' });
     }
