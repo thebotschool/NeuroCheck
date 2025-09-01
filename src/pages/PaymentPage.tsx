@@ -32,10 +32,10 @@ export const PaymentPage = () => {
             <div className="ym-product">
               <div className="ym-product-line">
                 <span className="ym-product-description"><span className="ym-product-count">1×</span>Цифровое исследование учебных функций</span>
-                <span className="ym-product-price" data-price="500" data-id="420" data-count="1">500,00&nbsp;₽</span>
+                <span className="ym-product-price" data-price="850" data-id="420" data-count="1">850,00&nbsp;₽</span>
               </div>
               <input disabled type="hidden" name="text" value="Цифровое исследование учебных функций" />
-              <input disabled type="hidden" name="price" value="500" />
+              <input disabled type="hidden" name="price" value="850" />
               <input disabled type="hidden" name="quantity" value="1" />
               <input disabled type="hidden" name="paymentSubjectType" value="commodity" />
               <input disabled type="hidden" name="paymentMethodType" value="full_prepayment" />
@@ -56,11 +56,11 @@ export const PaymentPage = () => {
               <input name="sum" placeholder="0.00" className="ym-input ym-sum-input ym-required-input" type="number" step="any" value="1000" />
             </div>
             <button data-text="Пройти тестирование" className="ym-btn-pay ym-result-price">
-              <span className="ym-text-crop">Пройти тестирование</span> <span className="ym-price-output">500,00&nbsp;₽</span>
+              <span className="ym-text-crop">Пройти тестирование</span> <span className="ym-price-output">850,00&nbsp;₽</span>
             </button>
             <img src="https://yookassa.ru/integration/simplepay/img/iokassa-gray.svg?v=1.26.0" className="ym-logo" width="114" height="27" alt="ЮKassa" />
           </div>
-          <input name="shopId" type="hidden" value="1146276" />
+          <input name="shopId" type="hidden" value="1149840" />
           <input name="successURL" type="hidden" value={successURL} />
         </form>
       </div>
