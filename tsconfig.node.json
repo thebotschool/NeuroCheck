@@ -18,5 +18,8 @@
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["vite.config.ts"]
+  "include": [
+    "api/**/*.ts", // 💥 ДОБАВЬ ЭТО
+    "vite.config.ts"
+  ]
 }
