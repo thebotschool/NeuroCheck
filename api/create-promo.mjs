@@ -7,17 +7,10 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { quantity, adminKey } = req.body;
+    const { quantity, adminKey, max_uses, expires_at, user_id } = req.body;
 
     // 1. Validate Admin Key
     const expectedAdminKey = process.env.ADMIN_KEY;
-
-    // Securely log key details for debugging
-    console.log('Admin Key Validation:');
-    console.log(`  - Received Key Length: ${adminKey?.length || 0}`);
-    console.log(`  - Expected Key Length: ${expectedAdminKey?.length || 0}`);
-    console.log(`  - Keys Match: ${adminKey === expectedAdminKey}`);
-
     if (!expectedAdminKey || adminKey !== expectedAdminKey) {
       return res.status(403).json({ error: 'Invalid admin key' });
     }
@@ -34,17 +27,17 @@ export default async function handler(req, res) {
     const codesToInsert = [];
 
     for (let i = 0; i < numQuantity; i++) {
-      // A simple promo code format
       const token = `PROMO-${randomUUID().slice(0, 8).toUpperCase()}`;
       generatedTokens.push(token);
       codesToInsert.push({
         code: token,
-        // expires_at can be set here if needed
+        max_uses: max_uses || 1,
+        expires_at: expires_at || null,
+        user_id: user_id || null,
       });
     }
 
     // 4. Insert into Supabase
-    // Assuming a 'promo_codes' table with a 'code' column
     const { data, error } = await supabase
       .from('promo_codes')
       .insert(codesToInsert)
@@ -52,7 +45,6 @@ export default async function handler(req, res) {
 
     if (error) {
       console.error('Error inserting promo codes:', error);
-      // Handle potential duplicate codes, though highly unlikely
       if (error.code === '23505') { // unique_violation
         return res.status(500).json({ error: 'Failed to generate unique codes. Please try again.' });
       }
