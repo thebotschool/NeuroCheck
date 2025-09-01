@@ -49,3 +49,5 @@ export const PaymentPage = () => {
     </div>
   );
 };
+
+export default PaymentPage;
