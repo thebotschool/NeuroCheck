@@ -58,6 +58,7 @@ export interface MemoryResult {
   substitutionErrors?: number;
   startPosition?: number;
   reconstructionTime?: number;
+  placementSequence?: number[];
 }
 
 // --- App-level Test Type ---

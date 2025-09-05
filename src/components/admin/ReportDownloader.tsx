@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { generatePdf } from '@/lib/pdfGenerator';
 import { loadDetailedReport, generateFallbackReport } from '@/lib/reportLoader';
 import { toast } from '@/hooks/use-toast';
+import { scoreTCP, scoreGoNoGo, scoreMemory, buildSummaryKey, getAgeGroupId } from '@/lib/scoring';
 
 interface ReportDownloaderProps {
   test: Record<string, any>;
@@ -15,17 +16,29 @@ export const ReportDownloader: React.FC<ReportDownloaderProps> = ({ test }) => {
   const reportRef = useRef<HTMLDivElement>(null);
 
   const handleDownload = async () => {
-    if (!test.summary?.summaryKey || !test.age_group_id) {
-      toast({ title: 'Ошибка', description: 'Недостаточно данных для создания отчета.', variant: 'destructive' });
-      return;
-    }
-
     setIsGenerating(true);
 
     try {
-      let content = await loadDetailedReport(test.summary.summaryKey, test.age_group_id);
+      let summaryKey = test.summary?.summaryKey;
+      let ageGroupId = test.age_group_id;
+
+      if (!summaryKey || !ageGroupId) {
+        if (test.tcp_results && test.gonogo_results && test.memory_results && test.age) {
+          const x = scoreTCP(test.tcp_results, test.age);
+          const y = scoreGoNoGo(test.gonogo_results, test.age);
+          const z = scoreMemory(test.memory_results, test.age);
+          summaryKey = buildSummaryKey(x, y, z);
+          ageGroupId = getAgeGroupId(test.age);
+        } else {
+          toast({ title: 'Ошибка', description: 'Недостаточно данных для создания отчета.', variant: 'destructive' });
+          setIsGenerating(false);
+          return;
+        }
+      }
+
+      let content = await loadDetailedReport(summaryKey, ageGroupId);
       if (!content) {
-        content = generateFallbackReport(test.summary.summaryKey, test.age_group_id);
+        content = generateFallbackReport(summaryKey, ageGroupId);
         toast({ title: 'Внимание', description: 'Детальный отчет не найден, сгенерирован краткий отчет.' });
       }
       setReportContent(content);
@@ -44,9 +57,11 @@ export const ReportDownloader: React.FC<ReportDownloaderProps> = ({ test }) => {
     }
   }, [reportContent, test.id]);
 
+  const canGenerate = test.summary?.summaryKey || (test.tcp_results && test.gonogo_results && test.memory_results && test.age);
+
   return (
     <>
-      <Button onClick={handleDownload} disabled={isGenerating} size="sm">
+      <Button onClick={handleDownload} disabled={isGenerating || !canGenerate} size="sm">
         {isGenerating ? 'Генерация...' : 'Скачать отчет'}
       </Button>
       {reportContent && (
