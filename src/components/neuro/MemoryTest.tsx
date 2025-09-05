@@ -36,6 +36,7 @@ export const MemoryTest = ({ onComplete, age, devMode = false }: MemoryTestProps
   const [draggingSrc, setDraggingSrc] = useState<string | null>(null);
   const [reconstructionStart, setReconstructionStart] = useState<number | null>(null);
   const [firstDropSlot, setFirstDropSlot] = useState<number | null>(null);
+  const [placementSequence, setPlacementSequence] = useState<number[]>([]);
 
   // Vimeo player state
   const [player, setPlayer] = useState<any>(null);
@@ -52,6 +53,7 @@ export const MemoryTest = ({ onComplete, age, devMode = false }: MemoryTestProps
     setTargetSequence(seq);
     setCurrentMemorizeIndex(1);
     setPhase('memorize');
+    setPlacementSequence([]);
     toast({ title: 'Запоминание последовательности', description: `Длина: ${sequenceLength}. Запоминайте порядок` });
   };
 
@@ -103,6 +105,7 @@ export const MemoryTest = ({ onComplete, age, devMode = false }: MemoryTestProps
         setSlots(new Array(sequenceLength).fill(null));
         setReconstructionStart(Date.now());
         setFirstDropSlot(null);
+        setPlacementSequence([]);
         setPhase('reconstruct');
       }
     }, 250);
@@ -141,6 +144,7 @@ export const MemoryTest = ({ onComplete, age, devMode = false }: MemoryTestProps
     setSlots(new Array(sequenceLength).fill(null));
     setReconstructionStart(Date.now());
     setFirstDropSlot(null);
+    setPlacementSequence([]);
     setPhase('reconstruct');
   };
 
@@ -167,6 +171,7 @@ export const MemoryTest = ({ onComplete, age, devMode = false }: MemoryTestProps
       substitutionErrors,
       startPosition,
       reconstructionTime: reconstructionTimeMs,
+      placementSequence,
     };
     onComplete(results);
   };
@@ -183,6 +188,7 @@ export const MemoryTest = ({ onComplete, age, devMode = false }: MemoryTestProps
       substitutionErrors: 0,
       startPosition: -1,
       reconstructionTime: 0,
+      placementSequence: [],
     });
   };
 
@@ -191,6 +197,8 @@ export const MemoryTest = ({ onComplete, age, devMode = false }: MemoryTestProps
   const onDropToSlot = (slotIndex: number) => {
     if (draggingSrc == null) return;
     if (slots[slotIndex] !== null) return;
+
+    setPlacementSequence(prev => [...prev, slotIndex + 1]);
 
     setSlots(prev => {
       const next = [...prev];

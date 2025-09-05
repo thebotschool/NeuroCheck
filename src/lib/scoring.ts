@@ -126,7 +126,17 @@ export function buildFeedbackMarkdown(summaryKey: string, tcp: TCPResult, gng: G
 }
 
 
+
 // --- Age-related mappings ---
+
+export function getAgeGroupId(age: number): number {
+    if (age >= 7 && age <= 9) return 1;
+    if (age >= 10 && age <= 13) return 2;
+    if (age >= 14 && age <= 18) return 3;
+    if (age >= 19 && age <= 22) return 4;
+    if (age >= 23) return 5;
+    return 3; // Default to 14-18
+}
 
 // Mapping from the numeric age group ID in the DB to the age range string
 export const ageGroupNumberToString: { [key: number]: string } = {

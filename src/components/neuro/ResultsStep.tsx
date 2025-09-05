@@ -153,6 +153,18 @@ export const ResultsStep = ({
             </div>
           </CardContent>
         </Card>
+        {devMode && (
+          <Card className="mt-4 avoid-break">
+            <CardHeader>
+              <CardTitle>Dev Info</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <pre className="whitespace-pre-wrap">
+                {JSON.stringify(test, null, 2)}
+              </pre>
+            </CardContent>
+          </Card>
+        )}
       </div>
       <div style={{ position: 'absolute', left: '-9999px' }}>
         <div ref={reportRef} className="prose max-w-none p-4 border rounded-lg bg-white report-content">
