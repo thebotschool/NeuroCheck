@@ -22,7 +22,7 @@ export default async function handler(req, res) {
       type: 'redirect',
       return_url: 'https://www.neurocheck.ru/success',
     },
-    description: 'Цифровое исследование учебных функций',
+    description: 'цифровой чекап учебных функций',
     metadata: { email, clientId },
     receipt: {
       customer: {
@@ -30,7 +30,7 @@ export default async function handler(req, res) {
       },
       items: [
         {
-          description: 'Цифровое исследование учебных функций',
+          description: 'цифровой чекап учебных функций',
           quantity: '1.00',
           amount: {
             value: '850.00',

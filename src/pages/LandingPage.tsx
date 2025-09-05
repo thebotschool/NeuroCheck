@@ -13,7 +13,7 @@ export default function LandingPage() {
         {/* Hero Section */}
         <section className="max-w-3xl mx-auto text-center space-y-6">
           <h1 className="text-4xl font-bold leading-tight">
-            NeuroCheck — цифровое исследование учебных функций школьника
+            NeuroCheck — цифровой чекап учебных функций школьника
           </h1>
           <p className="text-lg text-gray-600">
             Помогаем понять, как работают внимание, самоконтроль и память — за 15 минут, без сложного оборудования и без присутствия специалистов.
