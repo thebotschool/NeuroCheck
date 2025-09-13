@@ -1,11 +1,10 @@
 {
-  "version": 2,
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/(.*)",     "destination": "/index.html" }
   ],
   "functions": {
-    "api/**/*.mjs": {
-      "runtime": "@vercel/node@2.15.9"
+    "api/consume-token.mjs": {
+      "runtime": "nodejs18.x"
     }
   }
 }
