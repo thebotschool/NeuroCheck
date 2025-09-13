@@ -12,7 +12,7 @@
     "vercel-dev": "vercel dev"
   },
   "engines": {
-    "node": "22.x"
+    "node": ">=18 <=22"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
