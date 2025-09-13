@@ -2,11 +2,5 @@
   "version": 2,
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
-  ],
-  "functions": {
-    "api/consume-token.mjs": {
-      "runtime": "@vercel/node@3.0.0",
-      "memory": 128
-    }
-  }
+  ]
 }
