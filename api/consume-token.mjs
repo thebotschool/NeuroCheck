@@ -1,3 +1,5 @@
+import { sendReportEmail } from './_lib/sendEmail.js';
+
 // api/consume-token.mjs  (EDGE + REST)
 export const config = { runtime: 'edge' };
 
@@ -22,7 +24,7 @@ export default async function handler(req) {
     }
 
     // 1) SELECT tests by token
-    const sel = await fetch(`${SUPABASE_URL}/rest/v1/tests?token=eq.${encodeURIComponent(token)}&select=used,expires_at,is_completed,id`, {
+    const sel = await fetch(`${SUPABASE_URL}/rest/v1/tests?token=eq.${encodeURIComponent(token)}&select=*`, {
       headers: {
         apikey: SERVICE_KEY,
         Authorization: `Bearer ${SERVICE_KEY}`,
@@ -59,6 +61,10 @@ export default async function handler(req) {
     if (!upd.ok) {
       const txt = await upd.text().catch(() => '');
       return json({ consumed: false, reason: 'update_failed', status: upd.status, body: txt }, 500);
+    }
+
+    if (markAsCompleted) {
+      await sendReportEmail(row);
     }
 
     return json({ consumed: true });
