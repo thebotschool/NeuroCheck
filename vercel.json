@@ -3,7 +3,7 @@
     { "source": "/(.*)",     "destination": "/index.html" }
   ],
   "functions": {
-    "api/consume-token.mjs": {
+    "api/consume-token": {
       "runtime": "nodejs18.x",
       "memory": 128
     }
