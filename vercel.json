@@ -2,9 +2,7 @@
   "rewrites": [
     { "source": "/(.*)",     "destination": "/index.html" }
   ],
-  "functions": {
-    "api/consume-token.mjs": {
-      "runtime": "nodejs18.x"
-    }
-  }
+  "builds": [
+    { "src": "api/consume-token.mjs", "use": "@vercel/node@3.0.29" }
+  ]
 }
