@@ -1,14 +1,10 @@
 // api/reset-dev-token.mjs
-export const config = { runtime: 'edge' };
-
-const J = (d,s=200)=>new Response(JSON.stringify(d),{status:s,headers:{'content-type':'application/json'}});
-
-export default async function handler(req) {
+export default async function handler(req, res) {
   try {
-    if (req.method !== 'POST') return J({ error:'method_not_allowed' }, 405);
+    if (req.method !== 'POST') return res.status(405).json({ error:'method_not_allowed' });
 
     // body may be empty
-    let body=null; try { body = await req.json(); } catch {}
+    const body = req.body;
 
     const DEV_BYPASS_TOKEN = (process.env.VITE_DEV_BYPASS_TOKEN ?? 'dev-token-123').toString();
     const token = (body?.token ?? DEV_BYPASS_TOKEN).toString().trim();
@@ -17,12 +13,12 @@ export default async function handler(req) {
     const isNonProd = env !== 'production';
     const BYPASS_ENABLED = process.env.VITE_DEV_BYPASS_ENABLED === 'true';
     const allowed = (isNonProd && BYPASS_ENABLED) || (BYPASS_ENABLED && token === DEV_BYPASS_TOKEN);
-    if (!allowed) return J({ error:'forbidden', env, BYPASS_ENABLED, token, DEV_BYPASS_TOKEN }, 403);
+    if (!allowed) return res.status(403).json({ error:'forbidden', env, BYPASS_ENABLED, token, DEV_BYPASS_TOKEN });
 
     const SUPABASE_URL = process.env.SUPABASE_URL;
     const SERVICE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!SUPABASE_URL || !SERVICE_KEY) {
-      return J({ error:'server_misconfig', SUPABASE_URL:!!SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY:!!SERVICE_KEY }, 500);
+      return res.status(500).json({ error:'server_misconfig', SUPABASE_URL:!!SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY:!!SERVICE_KEY });
     }
 
     // Ensure row exists (UPSERT by unique token)
@@ -43,7 +39,7 @@ export default async function handler(req) {
           cpt_results:null, gonogo_results:null, memory_results:null
         })
       });
-      if (!r.ok) return J({ ok:false, step:'upsert', status:r.status, body: await r.text().catch(()=>'(no text)') }, 500);
+      if (!r.ok) return res.status(500).json({ ok:false, step:'upsert', status:r.status, body: await r.text().catch(()=>'(no text)') });
     }
 
     // Reset flags
@@ -66,8 +62,7 @@ export default async function handler(req) {
       })
     });
     const patchedText = await patch.text().catch(()=>'(no text)');
-    let patched=null; try { patched = JSON.parse(patchedText); } catch {}
-    if (!patch.ok) return J({ ok:false, step:'patch', status:patch.status, body:patchedText }, 500);
+    if (!patch.ok) return res.status(500).json({ ok:false, step:'patch', status:patch.status, body:patchedText });
 
     // Re-select for proof
     const reSel = await fetch(`${SUPABASE_URL}/rest/v1/tests?token=eq.${encodeURIComponent(token)}&select=id,token,used,is_completed,current_step,completed_at,expires_at`, {
@@ -75,9 +70,9 @@ export default async function handler(req) {
     });
     const after = await reSel.json();
 
-    return J({ ok:true, token, after });
+    return res.status(200).json({ ok:true, token, after });
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'unknown';
-    return J({ ok:false, error:`reset-dev-token failed: ${msg}` }, 500);
+    return res.status(500).json({ ok:false, error:`reset-dev-token failed: ${msg}` });
   }
 }

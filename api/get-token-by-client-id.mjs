@@ -1,18 +1,12 @@
 // api/get-token-by-client-id.mjs
 import { getAdminClient } from './_lib/supabaseServer.mjs';
 
-export const config = { runtime: 'edge' };
-
-const json = (d, s = 200) =>
-  new Response(JSON.stringify(d), { status: s, headers: { 'content-type': 'application/json' } });
-
-export default async function handler(req) {
+export default async function handler(req, res) {
   try {
-    const url = new URL(req.url);
-    const clientId = url.searchParams.get('clientId');
+    const { clientId } = req.query;
 
     if (!clientId) {
-      return json({ error: 'clientId_required' }, 400);
+      return res.status(400).json({ error: 'clientId_required' });
     }
 
     const supabase = getAdminClient();
@@ -25,19 +19,19 @@ export default async function handler(req) {
     if (error) {
       // 'PGRST116' is the code for "No rows found"
       if (error.code === 'PGRST116') {
-        return json({ token: null, status: 'pending' }, 200);
+        return res.status(200).json({ token: null, status: 'pending' });
       }
       console.error('Supabase select failed:', error);
-      return json({ error: 'select_failed', details: error }, 500);
+      return res.status(500).json({ error: 'select_failed', details: error });
     }
 
     if (data) {
-      return json({ token: data.token, email: data.email, status: 'found' }, 200);
+      return res.status(200).json({ token: data.token, email: data.email, status: 'found' });
     } else {
-      return json({ token: null, status: 'pending' }, 200);
+      return res.status(200).json({ token: null, status: 'pending' });
     }
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'unknown';
-    return json({ error: `get-token-by-client-id failed: ${msg}` }, 500);
+    return res.status(500).json({ error: `get-token-by-client-id failed: ${msg}` });
   }
 }
