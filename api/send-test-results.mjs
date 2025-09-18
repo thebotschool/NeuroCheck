@@ -1,3 +1,4 @@
+export const config = { runtime: "nodejs" };
 
 import { Resend } from 'resend';
 

@@ -1,3 +1,5 @@
+export const config = { runtime: "nodejs" };
+
 // api/get-token-by-client-id.mjs
 import { getAdminClient } from './_lib/supabaseServer.mjs';
 

@@ -1,3 +1,5 @@
+export const config = { runtime: "nodejs" };
+
 import { Buffer } from 'buffer';
 import { getAdminClient } from './_lib/supabaseServer.mjs';
 import { sendAccessEmail } from './_lib/resend.mjs';

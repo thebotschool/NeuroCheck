@@ -1,3 +1,5 @@
+export const config = { runtime: "nodejs" };
+
 // api/reset-dev-token.mjs
 export default async function handler(req, res) {
   try {

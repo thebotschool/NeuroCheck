@@ -1,3 +1,5 @@
+export const config = { runtime: "nodejs" };
+
 // api/verify-token.mjs
 // NODEJS + Supabase REST. Проверяет токен и возвращает понятный JSON.
 // GET /api/verify-token?token=...   (можно и POST с { token, email })

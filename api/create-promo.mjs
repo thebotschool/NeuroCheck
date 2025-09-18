@@ -1,3 +1,5 @@
+export const config = { runtime: "nodejs" };
+
 import { getAdminClient } from './_lib/supabaseServer.mjs';
 import { randomUUID } from 'crypto';
 

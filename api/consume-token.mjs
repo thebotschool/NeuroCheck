@@ -1,3 +1,5 @@
+export const config = { runtime: "nodejs" };
+
 // api/consume-token.mjs  (NODEJS + REST)
 export default async function handler(req, res) {
   try {
