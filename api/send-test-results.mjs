@@ -17,7 +17,7 @@ export default async function handler(req, res) {
     }
 
     await resend.emails.send({
-      from: 'NeuroCheck <noreply@neurocheck.ru>',
+      from: 'NeuroCheck <results@neurocheck.ru>',
       to: [email],
       subject: 'Результаты вашего тестирования NeuroCheck',
       html: `
