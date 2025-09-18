@@ -237,10 +237,11 @@ const NeuroCheck = () => {
   }
 
   if (!testStarted && tokenState === 'valid') {
+    const isTimeRestrictionEnabled = import.meta.env.VITE_TIME_RESTRICTION_ENABLED === 'true';
     const currentHour = new Date().getHours();
     const isTimeValid = currentHour >= 6 && currentHour < 12;
 
-    if (isTimeValid || timeBypassed) {
+    if (!isTimeRestrictionEnabled || isTimeValid || timeBypassed) {
       if (instructionStep === 'parents') {
         return (
           <div className="min-h-screen bg-white text-gray-900 px-6 py-12 flex items-center justify-center">

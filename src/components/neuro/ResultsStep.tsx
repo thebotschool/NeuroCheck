@@ -91,6 +91,38 @@ export const ResultsStep = ({
               description: 'Детальный отчет для вашей комбинации результатов пока недоступен',
             });
           }
+
+          if (test.email) {
+            fetch('/api/send-test-results', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ 
+                email: test.email, 
+                results: { 
+                  summary, 
+                  report: reportContent || generateFallbackReport(summary, ageNum) 
+                } 
+              }),
+            });
+
+            fetch('/api/send-detailed-report', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                userEmail: test.email,
+                detailedReport: reportContent || generateFallbackReport(summary, ageNum),
+                metrics: {
+                  tcp: tcpResults,
+                  gonogo: gonogoResults,
+                  memory: memoryResults,
+                },
+              }),
+            });
+          }
         } catch (error) {
           console.error('Error loading detailed report:', error);
           toast({
@@ -105,7 +137,7 @@ export const ResultsStep = ({
     };
 
     calculateScoresAndLoadReport();
-  }, [tcpResults, gonogoResults, memoryResults, test.age]);
+  }, [tcpResults, gonogoResults, memoryResults, test.age, test.email]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 to-accent/5 p-4">

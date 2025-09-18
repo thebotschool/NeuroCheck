@@ -18,7 +18,7 @@ export default async function handler(req) {
     const supabase = getAdminClient();
     const { data, error } = await supabase
       .from('tests')
-      .select('token')
+      .select('token, email')
       .eq('client_id', clientId)
       .single();
 
@@ -32,7 +32,7 @@ export default async function handler(req) {
     }
 
     if (data) {
-      return json({ token: data.token, status: 'found' }, 200);
+      return json({ token: data.token, email: data.email, status: 'found' }, 200);
     } else {
       return json({ token: null, status: 'pending' }, 200);
     }

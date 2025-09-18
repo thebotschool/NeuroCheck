@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 const SuccessPage = () => {
   const [token, setToken] = useState(null);
+  const [email, setEmail] = useState(null);
   const [error, setError] = useState(null);
   const [timedOut, setTimedOut] = useState(false);
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ const SuccessPage = () => {
         const data = await response.json();
         if (data.token) {
           setToken(data.token);
+          setEmail(data.email);
         }
       } catch (e) {
         console.error('Ошибка при получении токена:', e);
@@ -44,6 +46,20 @@ const SuccessPage = () => {
 
     return cleanup;
   }, [token, timedOut, error]); // Rerun effect if token changes (to cleanup)
+
+  useEffect(() => {
+    if (token && email) {
+      const testUrl = `${window.location.origin}/test?token=${token}`;
+      fetch('/api/send-payment-confirmation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, testUrl }),
+      });
+    }
+  }, [token, email]);
+
 
   const handleGoToTest = () => {
     if (token) {
