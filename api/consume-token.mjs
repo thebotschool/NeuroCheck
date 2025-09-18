@@ -1,7 +1,5 @@
-import { sendReportEmail } from './_lib/sendEmail.js';
-
 // api/consume-token.mjs  (EDGE + REST)
-export const config = { runtime: 'edge' };
+export const config = { runtime: 'nodejs' };
 
 const json = (d, s = 200) =>
   new Response(JSON.stringify(d), { status: s, headers: { 'content-type': 'application/json' } });
