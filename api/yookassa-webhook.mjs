@@ -2,10 +2,12 @@ export const config = { runtime: "nodejs" };
 
 import { Buffer } from 'buffer';
 import { getAdminClient } from './_lib/supabaseServer.mjs';
-import { sendAccessEmail } from './_lib/resend.mjs';
+import { Resend } from 'resend';
 import { randomUUID } from 'crypto';
 
-const USE_UNIFIED_TABLE = false; // Set to true to use a single 'orders' table
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+const USE_UNIFIED_TABLE = false; // Set to true if you ever move to a single 'orders' table
 
 const readRawBody = (req) => {
   return new Promise((resolve, reject) => {
@@ -22,70 +24,97 @@ const readRawBody = (req) => {
   });
 };
 
+async function sendAccessEmail(email, accessUrl) {
+  if (!email) {
+    console.warn("⚠️ Попытка отправить письмо без email");
+    return;
+  }
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: 'NeuroCheck <noreply@neurocheck.ru>',
+      to: [email],
+      subject: 'Ссылка на прохождение тестирования NeuroCheck',
+      html: `
+        <h1>Здравствуйте!</h1>
+        <p>Вы успешно оплатили тестирование NeuroCheck.</p>
+        <p>Для начала тестирования, пожалуйста, перейдите по <a href="${accessUrl}">этой ссылке</a>.</p>
+        <p>С уважением,<br>Команда NeuroCheck</p>
+      `,
+    });
+
+    if (error) {
+      console.error("❌ Ошибка при отправке письма через Resend:", error);
+      throw error;
+    }
+
+    console.log("✅ Письмо успешно отправлено:", data);
+  } catch (e) {
+    console.error("❌ sendAccessEmail failed:", e);
+    throw e;
+  }
+}
+
 export default async (req, res) => {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return res.status(405).end('Method Not Allowed');
   }
 
-  console.log('Yookassa webhook received');
+  console.log('📩 Yookassa webhook received');
 
   try {
     const rawBody = await readRawBody(req);
-    console.log('Webhook raw body:', rawBody);
+    console.log('Raw body:', rawBody);
 
     const payload = JSON.parse(rawBody);
-    console.log('Webhook payload:', payload);
+    console.log('Parsed payload:', payload);
 
     if (payload.event !== 'payment.succeeded') {
-      console.log(`Event ignored: ${payload.event}`);
+      console.log(`ℹ️ Event ignored: ${payload.event}`);
       return res.status(200).send('Event ignored');
     }
 
-    console.log('Processing payment.succeeded event');
+    console.log('✅ Processing payment.succeeded event');
     const { object: payment } = payload;
     const paymentId = payment.id;
-    let email = payment.metadata?.email || payment.customer?.email;
+    let email = payment.metadata?.email || payment.customer?.email || '';
     const clientId = payment.metadata?.clientId;
 
-    console.log(`Payment ID: ${paymentId}, Email: ${email}, Client ID: ${clientId}`);
-
-    if (!email) {
-      console.warn(`Email not found in metadata or customer info for payment ${paymentId}.`);
-      email = '';
-    }
+    console.log(`💳 Payment ID: ${paymentId}, Email: ${email}, Client ID: ${clientId}`);
 
     const supabase = getAdminClient();
-    console.log('Supabase client created');
+    console.log('🔗 Supabase client created');
 
-    if (USE_UNIFIED_TABLE) {
-      // Logic for a single 'orders' table (not implemented as per current schema)
-    } else {
-      console.log('Upserting payment record...');
+    if (!USE_UNIFIED_TABLE) {
+      console.log('📥 Upserting payment record...');
       const paymentData = {
         payment_id: paymentId,
         status: payment.status,
         amount: payment.amount.value,
         currency: payment.amount.currency,
         description: payment.description,
-        email: email,
+        email,
         metadata: payment.metadata,
         updated_at: new Date(),
       };
-      console.log('Payment data to upsert:', paymentData);
+      console.log('Payment data:', paymentData);
 
-      const { error: paymentError } = await supabase.from('payments').upsert(paymentData, { onConflict: 'payment_id' });
+      const { error: paymentError } = await supabase
+        .from('payments')
+        .upsert(paymentData, { onConflict: 'payment_id' });
 
       if (paymentError) {
-        console.error('Error upserting payment:', paymentError);
+        console.error('❌ Error upserting payment:', paymentError);
         throw paymentError;
       }
-      console.log('Payment record upserted successfully');
+      console.log('✅ Payment record saved');
     }
 
     const token = `${randomUUID()}-${Date.now()}`;
     const tokenTtlHoursRaw = process.env.TOKEN_TTL_HOURS;
     let expiresAt = null;
+
     if (tokenTtlHoursRaw) {
       const tokenTtlHours = parseInt(tokenTtlHoursRaw, 10);
       if (!isNaN(tokenTtlHours)) {
@@ -94,7 +123,7 @@ export default async (req, res) => {
       }
     }
 
-    console.log('Inserting test record...');
+    console.log('📥 Inserting test record...');
     const testData = {
       email,
       token,
@@ -103,7 +132,7 @@ export default async (req, res) => {
       used: false,
       client_id: clientId,
     };
-    console.log('Test data to insert:', testData);
+    console.log('Test data:', testData);
 
     const { data: test, error: testError } = await supabase
       .from('tests')
@@ -112,22 +141,20 @@ export default async (req, res) => {
       .single();
 
     if (testError) {
-      console.error('Error inserting test record:', testError);
+      console.error('❌ Error inserting test record:', testError);
       throw testError;
     }
-    console.log('Test record inserted successfully:', test);
+    console.log('✅ Test record inserted:', test);
 
     const siteUrl = process.env.SITE_URL || 'http://localhost:5173';
     const accessUrl = `${siteUrl}/test?token=${token}`;
 
-    console.log(`Sending access email to ${email} with URL: ${accessUrl}`);
+    console.log(`📧 Sending access email to ${email} with URL: ${accessUrl}`);
     await sendAccessEmail(email, accessUrl);
-    console.log('Access email sent');
 
     return res.status(200).json({ ok: true, testId: test.id, email });
-
   } catch (error) {
-    console.error('Webhook Error:', error);
+    console.error('❌ Webhook Error:', error);
     const message = error instanceof Error ? error.message : 'Unknown error';
     return res.status(500).json({ ok: false, error: message });
   }
