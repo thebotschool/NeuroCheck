@@ -60,12 +60,12 @@ const SuccessPage = () => {
     }
   }, [token, email]);
 
-
-  const handleGoToTest = () => {
+  useEffect(() => {
     if (token) {
       navigate(`/test?token=${token}`);
     }
-  };
+  }, [token, navigate]);
+
 
   const renderContent = () => {
     if (error) {
@@ -74,13 +74,7 @@ const SuccessPage = () => {
     if (token) {
       return (
         <div>
-          <p className="text-gray-600">Ваша ссылка на тест готова.</p>
-          <button
-            onClick={handleGoToTest}
-            className="mt-4 w-full bg-black text-white py-2 rounded"
-          >
-            Перейти к тестированию
-          </button>
+          <p className="text-gray-600">Перенаправляем на страницу теста...</p>
         </div>
       );
     }
