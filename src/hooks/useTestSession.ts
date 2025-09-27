@@ -48,8 +48,8 @@ export const useTestSession = () => {
     } catch (error) {
       console.error('Error updating test with user data:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось обновить данные сессии',
+        title: 'Error',
+        description: 'Cannot update session data',
         variant: 'destructive',
       });
       return null;
@@ -86,8 +86,8 @@ export const useTestSession = () => {
     } catch (error) {
       console.error('Error updating test:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось обновить сессию',
+        title: 'Error',
+        description: 'Cannot update session',
         variant: 'destructive',
       });
     } finally {

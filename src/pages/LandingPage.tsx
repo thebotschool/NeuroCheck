@@ -3,45 +3,65 @@ import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Footer from "@/components/Footer";
+import Header from "@/components/Header";
+import { useTranslation } from "react-i18next";
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   return (
     <div className="min-h-screen bg-white text-gray-900 flex flex-col">
+      <Header />
       <main className="flex-grow px-6 py-12 space-y-24">
         {/* Hero Section */}
         <section className="max-w-3xl mx-auto text-center space-y-6">
           <h1 className="text-4xl font-bold leading-tight">
-            NeuroCheck — цифровой чекап учебных функций школьника
+            {t("landing.title")}
           </h1>
-          <p className="text-lg text-gray-600">
-            Помогаем понять, как работают внимание, самоконтроль и память — за 15 минут, без сложного оборудования и без присутствия специалистов.
-          </p>
-          <Button className="text-lg px-6 py-4" onClick={() => navigate('/access')}>Начать тест</Button>
-          
+          <p className="text-lg text-gray-600">{t("landing.slogan")}</p>
+          <Button
+            className="text-lg px-6 py-4"
+            onClick={() => navigate("/access")}
+          >
+            {t("landing.start-test")}
+          </Button>
         </section>
 
         {/* Для кого */}
         <section className="max-w-4xl mx-auto space-y-6">
-          <h2 className="text-2xl font-semibold text-center">Для кого</h2>
+          <h2 className="text-2xl font-semibold text-center">
+            {t("landing.for-whom.title")}
+          </h2>
           <div className="grid md:grid-cols-3 gap-6 text-left">
             <Card>
               <CardContent className="p-6">
-                <h3 className="font-semibold mb-2">Родителям</h3>
-                <p className="text-gray-700">Которые хотят разобраться, почему учёба даётся легко или трудно, и как поддержать ребёнка.</p>
+                <h3 className="font-semibold mb-2">
+                  {t("landing.for-whom.parents.title")}
+                </h3>
+                <p className="text-gray-700">
+                  {t("landing.for-whom.parents.text")}
+                </p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-6">
-                <h3 className="font-semibold mb-2">Учителям и школам</h3>
-                <p className="text-gray-700">Которые ищут способы повысить учебную продуктивность класса или отдельных учеников.</p>
+                <h3 className="font-semibold mb-2">
+                  {t("landing.for-whom.teachers.title")}
+                </h3>
+                <p className="text-gray-700">
+                  {t("landing.for-whom.teachers.text")}
+                </p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-6">
-                <h3 className="font-semibold mb-2">Психологам и тьюторам</h3>
-                <p className="text-gray-700">Которые используют данные о когнитивных функциях для индивидуальной работы с детьми.</p>
+                <h3 className="font-semibold mb-2">
+                  {t("landing.for-whom.psychologists.title")}
+                </h3>
+                <p className="text-gray-700">
+                  {t("landing.for-whom.psychologists.text")}
+                </p>
               </CardContent>
             </Card>
           </div>
@@ -49,62 +69,99 @@ export default function LandingPage() {
 
         {/* Как это работает */}
         <section className="max-w-4xl mx-auto space-y-6">
-          <h2 className="text-2xl font-semibold text-center">Как это работает</h2>
-          <p className="text-center text-gray-600">В основе — три научно обоснованных задания, изучающих ключевые механизмы, необходимые для успешной учёбы:</p>
+          <h2 className="text-2xl font-semibold text-center">
+            {t("landing.how-it-works.title")}
+          </h2>
+          <p className="text-center text-gray-600">
+            {t("landing.how-it-works.description")}
+          </p>
           <div className="grid md:grid-cols-3 gap-6 text-left">
-            <Card><CardContent className="p-6"><b>Внимание</b> — способность сосредотачиваться и удерживать фокус.</CardContent></Card>
-            <Card><CardContent className="p-6"><b>Самоконтроль</b> — умение сдерживать импульсы и действовать обдуманно.</CardContent></Card>
-            <Card><CardContent className="p-6"><b>Рабочая память</b> — возможность удерживать и использовать информацию в процессе решения задач.</CardContent></Card>
+            <Card>
+              <CardContent className="p-6">
+                <b>{t("landing.how-it-works.attention.title")}</b>{" "}
+                {t("landing.how-it-works.attention.text")}
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6">
+                <b>{t("landing.how-it-works.selfcontrol.title")}</b>{" "}
+                {t("landing.how-it-works.selfcontrol.text")}
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6">
+                <b>{t("landing.how-it-works.memory.title")}</b>{" "}
+                {t("landing.how-it-works.memory.text")}
+              </CardContent>
+            </Card>
           </div>
-          <p className="text-center text-sm text-gray-500">Всего 3 задания по 2 минуты, с короткими паузами между ними. Всё проходит онлайн, ребёнок выполняет самостоятельно.</p>
+          <p className="text-center text-sm text-gray-500">
+            {t("landing.how-it-works.smalltext")}
+          </p>
         </section>
 
         {/* Что вы получите */}
         <section className="max-w-4xl mx-auto space-y-6 text-center">
-          <h2 className="text-2xl font-semibold">Что вы получите</h2>
-          <p className="text-gray-600">После прохождения вы получите PDF-отчёт, в котором:</p>
+          <h2 className="text-2xl font-semibold">
+            {t("landing.what-you-get.title")}
+          </h2>
+          <p className="text-gray-600">{t("landing.what-you-get.description")}</p>
           <ul className="list-disc list-inside text-left mx-auto max-w-xl text-gray-700 space-y-2">
-            <li>Чётко описаны сильные стороны и зоны для развития ребёнка.</li>
-            <li>Даны персональные рекомендации для дома и школы:
+            <li>{t("landing.what-you-get.item1")}</li>
+            <li>
+              {t("landing.what-you-get.item2")}
               <ul className="list-disc list-inside ml-6 mt-2">
-                <li>как организовать учебную среду;</li>
-                <li>какие упражнения и игры помогут укрепить навыки;</li>
-                <li>как поддерживать мотивацию и внимание.</li>
+                <li>{t("landing.what-you-get.item2-1")}</li>
+                <li>{t("landing.what-you-get.item2-2")}</li>
+                <li>{t("landing.what-you-get.item2-3")}</li>
               </ul>
             </li>
-            <li>Отмечены особенности, которые стоит учитывать в учёбе и повседневной жизни.</li>
+            <li>{t("landing.what-you-get.item3")}</li>
           </ul>
           <div className="flex justify-center gap-4 mt-6">
             <Button asChild variant="outline">
-              <Link to="/example-report">Пример отчета</Link>
+              <Link to="/example-report">{t("landing.buttons.example-report")}</Link>
             </Button>
             <Button asChild variant="outline">
-              <Link to="/validation">Научное подтверждение</Link>
+              <Link to="/validation">
+                {t("landing.buttons.scientific-validation")}
+              </Link>
             </Button>
           </div>
         </section>
 
-        
-
         {/* Почему это важно */}
         <section className="max-w-4xl mx-auto space-y-6">
-          <h2 className="text-2xl font-semibold text-center">Почему это важно</h2>
-          <p className="text-center text-gray-600">Учебный успех напрямую связан с качеством работы внимания, самоконтроля и памяти. Понимание этих процессов позволяет:</p>
+          <h2 className="text-2xl font-semibold text-center">
+            {t("landing.why-important.title")}
+          </h2>
+          <p className="text-center text-gray-600">
+            {t("landing.why-important.description")}
+          </p>
           <ul className="list-disc list-inside text-left mx-auto max-w-xl text-gray-700 space-y-2">
-            <li><b>родителям</b> — создать комфортные условия для учёбы дома;</li>
-            <li><b>учителям</b> — эффективнее взаимодействовать с учеником;</li>
-            <li><b>специалистам</b> — строить целевые программы развития.</li>
+            <li>
+              <strong>{t("landing.why-important.parents.label")}</strong> — {t("landing.why-important.parents.text")}
+            </li>
+            <li>
+              <strong>{t("landing.why-important.teachers.label")}</strong> — {t("landing.why-important.teachers.text")}
+            </li>
+            <li>
+              <strong>{t("landing.why-important.specialists.label")}</strong> — {t("landing.why-important.specialists.text")}
+            </li>
           </ul>
         </section>
 
+
         {/* Final CTA */}
         <section className="text-center">
-          <Button className="text-lg px-8 py-4" onClick={() => navigate('/access')}>Пройти диагностику</Button>
-          
+          <Button
+            className="text-lg px-8 py-4"
+            onClick={() => navigate("/access")}
+          >
+            {t("landing.final-cta")}
+          </Button>
         </section>
       </main>
-
-      {/* Footer */}
       <Footer />
     </div>
   );

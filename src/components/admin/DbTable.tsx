@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -10,6 +11,8 @@ interface DbTableProps {
 }
 
 export const DbTable: React.FC<DbTableProps> = ({ title, data, excludeColumns = [], actions }) => {
+  const { t } = useTranslation();
+
   if (!data.length) {
     return (
       <Card>
@@ -17,7 +20,7 @@ export const DbTable: React.FC<DbTableProps> = ({ title, data, excludeColumns = 
           <CardTitle>{title}</CardTitle>
         </CardHeader>
         <CardContent>
-          <p>No data to display.</p>
+          <p>{t('dbTable.noData')}</p>
         </CardContent>
       </Card>
     );
@@ -46,7 +49,7 @@ export const DbTable: React.FC<DbTableProps> = ({ title, data, excludeColumns = 
                 {headers.map((header) => (
                   <TableHead key={header}>{header}</TableHead>
                 ))}
-                {actions && <TableHead>Actions</TableHead>}
+                {actions && <TableHead>{t('dbTable.actions')}</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>

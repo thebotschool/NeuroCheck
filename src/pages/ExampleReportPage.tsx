@@ -4,30 +4,50 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const ExampleReportPage = () => {
   const [markdown, setMarkdown] = useState('');
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation(); // Добавляем i18n для доступа к текущему языку
 
   useEffect(() => {
-    fetch('/NeuroCheck_Report.md')
-      .then((response) => response.text())
-      .then((text) => setMarkdown(text));
-  }, []);
+    // Определяем суффикс файла на основе текущего языка
+    let langSuffix = i18n.language; // 'ru', 'en', 'az', 'he'
+    
+    // Если нужно, добавьте fallback, если язык не поддерживается
+    if (!['ru', 'en', 'az', 'he'].includes(langSuffix)) {
+      langSuffix = 'ru'; // Fallback на русский
+    }
+
+    // Формируем путь к файлу
+    fetch(`/data/${langSuffix}/NeuroCheck_Report_${langSuffix}.md`)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('File not found');
+        }
+        return response.text();
+      })
+      .then((text) => setMarkdown(text))
+      .catch((error) => {
+        console.error('Error loading markdown:', error);
+        setMarkdown(''); // Или загрузите fallback-файл
+      });
+  }, [i18n.language]); // Добавляем зависимость от i18n.language, чтобы перезагружать при смене языка
 
   return (
     <div className="min-h-screen bg-white p-8 max-w-4xl mx-auto">
       <div className="mb-6">
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           onClick={() => navigate('/')}
           className="flex items-center gap-2"
         >
           <ArrowLeft className="h-4 w-4" />
-          На главную
+          {t('common.return-to-main')}
         </Button>
       </div>
-      <h1 className="text-3xl font-bold mb-6">Пример отчета</h1>
+      <h1 className="text-3xl font-bold mb-6">{t('exampleReportPage.page.title')}</h1>
       <div className="space-y-6 text-gray-800">
         <ReactMarkdown remarkPlugins={[remarkGfm]}>{markdown}</ReactMarkdown>
       </div>

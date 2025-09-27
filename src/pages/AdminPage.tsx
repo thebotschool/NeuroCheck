@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -16,6 +17,7 @@ import { ReportDownloader } from '@/components/admin/ReportDownloader';
 const SESSION_STORAGE_KEY = 'neurocheck-admin-auth';
 
 export default function AdminPage() {
+  const { t } = useTranslation();
   const [isAuthenticated, setIsAuthenticated] = useState(
     sessionStorage.getItem(SESSION_STORAGE_KEY) === 'true'
   );
@@ -27,7 +29,7 @@ export default function AdminPage() {
   const [maxUses, setMaxUses] = useState(1);
   const [expiresAt, setExpiresAt] = useState<Date | undefined>();
   const [boundEmail, setBoundEmail] = useState('');
-  const [adminKey, setAdminKey] = useState(''); // Start with empty, will be filled on login
+  const [adminKey, setAdminKey] = useState('');
   const [showAdminKey, setShowAdminKey] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [generatedPromos, setGeneratedPromos] = useState<string[]>([]);
@@ -45,9 +47,9 @@ export default function AdminPage() {
       setIsAuthenticated(true);
       sessionStorage.setItem(SESSION_STORAGE_KEY, 'true');
       setAuthError('');
-      setAdminKey(keyInput); // Pre-fill the admin key for promo creation
+      setAdminKey(keyInput);
     } else {
-      setAuthError('Неверный ключ доступа');
+      setAuthError(t('adminPage.login.error'));
     }
   };
 
@@ -55,7 +57,7 @@ export default function AdminPage() {
     e.preventDefault();
     
     if (quantity < 1 || !adminKey.trim()) {
-      toast({ title: 'Ошибка', description: 'Админский ключ не может быть пустым.', variant: 'destructive' });
+      toast({ title: t('common.error'), description: t('common.adminKeyEmpty'), variant: 'destructive' });
       return;
     }
 
@@ -81,13 +83,13 @@ export default function AdminPage() {
 
       if (data.ok) {
         setGeneratedPromos(data.tokens);
-        toast({ title: 'Успешно', description: `Создано промокодов: ${data.tokens.length}` });
+        toast({ title: t('common.success'), description: `${t('common.createPromo.success')}: ${data.tokens.length}` });
       } else {
-        toast({ title: 'Ошибка', description: data.error || 'Не удалось создать промокоды', variant: 'destructive' });
+        toast({ title: t('common.error'), description: data.error || t('common.createPromo.success'), variant: 'destructive' });
       }
     } catch (error) {
       console.error('Error creating promo code:', error);
-      toast({ title: 'Ошибка', description: 'Не удалось создать промокоды.', variant: 'destructive' });
+      toast({ title: t('common.error'), description: t('common.createPromo.success'), variant: 'destructive' });
     } finally {
       setIsCreating(false);
     }
@@ -106,10 +108,10 @@ export default function AdminPage() {
         setPromoCodesData(data || []);
         setTestsData([]);
       }
-      toast({ title: 'Успешно', description: `Данные из таблицы ${tableName} загружены` });
+      toast({ title: t('common.success'), description: `${t('common.tableLoaded')} ${tableName}` });
     } catch (error: any) {
-      setFetchError(`Ошибка при загрузке данных из таблицы ${tableName}: ${error.message}`);
-      toast({ title: 'Ошибка', description: `Не удалось загрузить данные из таблицы ${tableName}`, variant: 'destructive' });
+      setFetchError(`${t('common.db.error')}: ${error.message}`);
+      toast({ title: t('common.error'), description: t('common.loadError'), variant: 'destructive' });
     } finally {
       setIsFetching(false);
     }
@@ -117,14 +119,14 @@ export default function AdminPage() {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text).then(() => {
-      toast({ title: 'Скопировано', description: 'Промокод скопирован в буфер обмена' });
+      toast({ title: t('common.copied'), description: t('common.promoCopied') });
     });
   };
 
   const copyAllToClipboard = () => {
     const allPromos = generatedPromos.join('\n');
     navigator.clipboard.writeText(allPromos).then(() => {
-      toast({ title: 'Скопировано', description: 'Все промокоды скопированы в буфер обмена' });
+      toast({ title: t('common.copied'), description: t('common.allPromoCopied') });
     });
   };
 
@@ -135,16 +137,16 @@ export default function AdminPage() {
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <LockKeyhole className="h-5 w-5" />
-                        Доступ к панели администратора
+                        {t('adminPage.login.title')}
                     </CardTitle>
                     <CardDescription>
-                        Пожалуйста, введите ключ доступа для продолжения.
+                        {t('adminPage.login.description')}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleLogin} className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="login-admin-key">Ключ доступа</Label>
+                            <Label htmlFor="login-admin-key">{t('adminPage.login.label')}</Label>
                             <Input
                                 id="login-admin-key"
                                 type="password"
@@ -157,7 +159,7 @@ export default function AdminPage() {
                             <p className="text-sm text-red-500">{authError}</p>
                         )}
                         <Button type="submit" className="w-full">
-                            Войти
+                            {t('adminPage.login.button')}
                         </Button>
                     </form>
                 </CardContent>
@@ -170,35 +172,35 @@ export default function AdminPage() {
     <div className="min-h-screen bg-gradient-to-br from-primary/5 to-accent/5 p-4">
       <div className="max-w-7xl mx-auto space-y-8">
         <div className="text-center">
-          <h1 className="text-3xl font-bold mb-2">Админ панель</h1>
-          <p className="text-muted-foreground">Создание промокодов и просмотр базы данных</p>
+          <h1 className="text-3xl font-bold mb-2">{t('adminPage.title')}</h1>
+          <p className="text-muted-foreground">{t('adminPage.subtitle')}</p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Gift className="h-5 w-5" />Создать промокоды</CardTitle>
-            <CardDescription>Настройте параметры и создайте один или несколько промокодов.</CardDescription>
+            <CardTitle className="flex items-center gap-2"><Gift className="h-5 w-5" />{t('adminPage.create.title')}</CardTitle>
+            <CardDescription>{t('adminPage.create.description')}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleCreatePromo} className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="quantity">Количество промокодов</Label>
+                  <Label htmlFor="quantity">{t('adminPage.create.quantity')}</Label>
                   <Input id="quantity" type="number" min="1" max="100" value={quantity} onChange={(e) => setQuantity(parseInt(e.target.value, 10) || 1)} disabled={isCreating} />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="max_uses">Кол-во активаций (на 1 код)</Label>
+                  <Label htmlFor="max_uses">{t('adminPage.create.maxUses')}</Label>
                   <Input id="max_uses" type="number" min="1" value={maxUses} onChange={(e) => setMaxUses(parseInt(e.target.value, 10) || 1)} disabled={isCreating} />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="expires_at">Срок действия (необязательно)</Label>
+                <Label htmlFor="expires_at">{t('adminPage.create.expires')}</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal", !expiresAt && "text-muted-foreground")}>
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {expiresAt ? format(expiresAt, "PPP") : <span>Выберите дату</span>}
+                      {expiresAt ? format(expiresAt, "PPP") : <span>{t('adminPage.create.expires.placeholder')}</span>}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0">
@@ -208,14 +210,14 @@ export default function AdminPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="bound_email">Привязать к Email (необязательно)</Label>
+                <Label htmlFor="bound_email">{t('adminPage.create.boundEmail')}</Label>
                 <Input id="bound_email" type="email" placeholder="user@example.com" value={boundEmail} onChange={(e) => setBoundEmail(e.target.value)} disabled={isCreating} />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="admin-key">Админский ключ (для подтверждения)</Label>
+                <Label htmlFor="admin-key">{t('adminPage.create.adminKey')}</Label>
                 <div className="relative">
-                  <Input id="admin-key" type={showAdminKey ? 'text' : 'password'} placeholder="Введите админский ключ" value={adminKey} onChange={(e) => setAdminKey(e.target.value)} disabled={isCreating} autoComplete="off" className="pr-10" />
+                  <Input id="admin-key" type={showAdminKey ? 'text' : 'password'} placeholder={t('adminPage.create.adminKey.placeholder') || ''} value={adminKey} onChange={(e) => setAdminKey(e.target.value)} disabled={isCreating} autoComplete="off" className="pr-10" />
                   <Button type="button" variant="ghost" size="sm" className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent" onClick={() => setShowAdminKey((prev) => !prev)}>
                     {showAdminKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
@@ -223,17 +225,17 @@ export default function AdminPage() {
               </div>
               
               <Button type="submit" className="w-full" disabled={isCreating} size="lg">
-                {isCreating ? 'Создание...' : 'Создать промокоды'}
+                {isCreating ? t('adminPage.create.button.loading') : t('adminPage.create.button')}
               </Button>
             </form>
 
             {generatedPromos.length > 0 && (
               <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
                 <div className="flex justify-between items-center mb-2">
-                  <h4 className="font-semibold text-green-900">Промокоды созданы!</h4>
+                  <h4 className="font-semibold text-green-900">{t('common.createPromo.success')}</h4>
                   <Button variant="ghost" size="sm" onClick={copyAllToClipboard}>
                     <Copy className="h-4 w-4 mr-2" />
-                    Копировать все
+                    {t('adminPage.create.copyAll')}
                   </Button>
                 </div>
                 <ul className="space-y-2">
@@ -253,16 +255,16 @@ export default function AdminPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Database className="h-5 w-5" />Просмотр базы данных</CardTitle>
-            <CardDescription>Просмотр таблиц 'tests' и 'promo_codes' из базы данных.</CardDescription>
+            <CardTitle className="flex items-center gap-2"><Database className="h-5 w-5" />{t('adminPage.db.title')}</CardTitle>
+            <CardDescription>{t('adminPage.db.description')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex gap-4">
               <Button onClick={() => fetchTableData('tests')} disabled={isFetching}>
-                {isFetching ? 'Загрузка...' : 'Загрузить таблицу Tests'}
+                {isFetching ? t('common.loading') : t('adminPage.db.loadTests')}
               </Button>
               <Button onClick={() => fetchTableData('promo_codes')} disabled={isFetching}>
-                {isFetching ? 'Загрузка...' : 'Загрузить таблицу Promo Codes'}
+                {isFetching ? t('common.loading') : t('adminPage.db.loadPromo')}
               </Button>
             </div>
             {fetchError && (

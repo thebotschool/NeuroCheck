@@ -9,6 +9,42 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 const USE_UNIFIED_TABLE = false; // Set to true if you ever move to a single 'orders' table
 
+// Словарь переводов
+const translations = {
+  ru: {
+    subject: 'Ссылка на прохождение тестирования NeuroCheck',
+    hello: 'Здравствуйте!',
+    paid: 'Вы успешно оплатили тестирование NeuroCheck.',
+    start: (url) =>
+      `Для начала тестирования, пожалуйста, перейдите по <a href="${url}">этой ссылке</a>.`,
+    regards: 'С уважением,<br>Команда NeuroCheck'
+  },
+  en: {
+    subject: 'Your NeuroCheck testing link',
+    hello: 'Hello!',
+    paid: 'You have successfully paid for the NeuroCheck testing.',
+    start: (url) =>
+      `To start testing, please click <a href="${url}">this link</a>.`,
+    regards: 'Best regards,<br>The NeuroCheck Team'
+  },
+  az: {
+    subject: 'NeuroCheck test linkiniz',
+    hello: 'Salam!',
+    paid: 'Siz NeuroCheck testini uğurla ödəmisiniz.',
+    start: (url) =>
+      `Testə başlamaq üçün zəhmət olmasa <a href="${url}">bu linkə</a> keçin.`,
+    regards: 'Hörmətlə,<br>NeuroCheck komandası'
+  },
+  he: {
+    subject: 'קישור למבחן NeuroCheck',
+    hello: 'שלום!',
+    paid: 'התשלום עבור מבחן NeuroCheck בוצע בהצלחה.',
+    start: (url) =>
+      `כדי להתחיל את המבחן אנא לחצו <a href="${url}">כאן</a>.`,
+    regards: 'בברכה,<br>צוות NeuroCheck'
+  }
+};
+
 const readRawBody = (req) => {
   return new Promise((resolve, reject) => {
     let body = '';
@@ -24,22 +60,27 @@ const readRawBody = (req) => {
   });
 };
 
-async function sendAccessEmail(email, accessUrl) {
+// Теперь sendAccessEmail принимает язык
+async function sendAccessEmail(email, accessUrl, lang = 'ru') {
   if (!email) {
     console.warn("⚠️ Попытка отправить письмо без email");
     return;
   }
 
+  const t = translations[lang] || translations.ru;
+
   try {
     const { data, error } = await resend.emails.send({
       from: 'NeuroCheck <noreply@neurocheck.ru>',
+      // from: 'NeuroCheck <onboarding@resend.dev>',
       to: [email],
-      subject: 'Ссылка на прохождение тестирования NeuroCheck',
+      // to: 'delivered@resend.dev',
+      subject: t.subject,
       html: `
-        <h1>Здравствуйте!</h1>
-        <p>Вы успешно оплатили тестирование NeuroCheck.</p>
-        <p>Для начала тестирования, пожалуйста, перейдите по <a href="${accessUrl}">этой ссылке</a>.</p>
-        <p>С уважением,<br>Команда NeuroCheck</p>
+        <h1>${t.hello}</h1>
+        <p>${t.paid}</p>
+        <p>${t.start(accessUrl)}</p>
+        <p>${t.regards}</p>
       `,
     });
 
@@ -80,8 +121,9 @@ export default async (req, res) => {
     const paymentId = payment.id;
     let email = payment.metadata?.email || payment.customer?.email || '';
     const clientId = payment.metadata?.clientId;
+    const lang = payment.metadata?.lang || 'ru'; // <-- язык из metadata, если передаёте при создании платежа
 
-    console.log(`💳 Payment ID: ${paymentId}, Email: ${email}, Client ID: ${clientId}`);
+    console.log(`💳 Payment ID: ${paymentId}, Email: ${email}, Client ID: ${clientId}, Lang: ${lang}`);
 
     const supabase = getAdminClient();
     console.log('🔗 Supabase client created');
@@ -131,6 +173,7 @@ export default async (req, res) => {
       expires_at: expiresAt ? expiresAt.toISOString() : null,
       used: false,
       client_id: clientId,
+      lang // сохраняем язык
     };
     console.log('Test data:', testData);
 
@@ -150,7 +193,7 @@ export default async (req, res) => {
     const accessUrl = `${siteUrl}/test?token=${token}`;
 
     console.log(`📧 Sending access email to ${email} with URL: ${accessUrl}`);
-    await sendAccessEmail(email, accessUrl);
+    await sendAccessEmail(email, accessUrl, lang);
 
     return res.status(200).json({ ok: true, testId: test.id, email });
   } catch (error) {
