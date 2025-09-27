@@ -7,10 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
-import { CreditCard, Gift, ArrowLeft } from 'lucide-react';
+import { CreditCard, Gift } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import Footer from '@/components/Footer';
 import Header from '@/components/Header';
+import BackButton from "@/components/BackButton"
 
 export default function AccessPage() {
   const { t } = useTranslation();
@@ -93,16 +94,7 @@ export default function AccessPage() {
       <main className="flex-grow p-4">
         <div className="max-w-2xl mx-auto">
           {/* Кнопка назад */}
-          <div className="mb-6">
-            <Button 
-              variant="ghost" 
-              onClick={() => navigate('/')}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              {t('common.return-to-main')}
-            </Button>
-          </div>
+          <BackButton/>
 
           {/* Заголовок */}
           <div className="text-center mb-8">

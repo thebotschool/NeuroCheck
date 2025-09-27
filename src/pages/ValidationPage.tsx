@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useTranslation } from 'react-i18next';
+import BackButton from "@/components/BackButton"
 
 const ValidationPage = () => {
   const [markdown, setMarkdown] = useState('');
@@ -34,6 +35,7 @@ const ValidationPage = () => {
 
   return (
     <div className="min-h-screen bg-white p-8 max-w-4xl mx-auto">
+      <BackButton/>
       <h1 className="text-3xl font-bold mb-6">
         {t('validationPage.title')}
       </h1>

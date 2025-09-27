@@ -1,14 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import BackButton from "@/components/BackButton"
 
 const ExampleReportPage = () => {
   const [markdown, setMarkdown] = useState('');
-  const navigate = useNavigate();
   const { t, i18n } = useTranslation(); // Добавляем i18n для доступа к текущему языку
 
   useEffect(() => {
@@ -37,16 +34,7 @@ const ExampleReportPage = () => {
 
   return (
     <div className="min-h-screen bg-white p-8 max-w-4xl mx-auto">
-      <div className="mb-6">
-        <Button
-          variant="ghost"
-          onClick={() => navigate('/')}
-          className="flex items-center gap-2"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          {t('common.return-to-main')}
-        </Button>
-      </div>
+      <BackButton/>
       <h1 className="text-3xl font-bold mb-6">{t('exampleReportPage.page.title')}</h1>
       <div className="space-y-6 text-gray-800">
         <ReactMarkdown remarkPlugins={[remarkGfm]}>{markdown}</ReactMarkdown>

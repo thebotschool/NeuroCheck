@@ -13,6 +13,7 @@ import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { DbTable } from '@/components/admin/DbTable';
 import { ReportDownloader } from '@/components/admin/ReportDownloader';
+import Header from '@/components/Header'
 
 const SESSION_STORAGE_KEY = 'neurocheck-admin-auth';
 
