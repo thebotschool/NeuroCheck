@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   onSelect: (ageBucket: string) => void; // '7-9' | '10-13' | '14-18' | '18-22' | '23+'
@@ -8,13 +9,16 @@ interface Props {
 }
 
 export const AgeSelectAfterConsent: React.FC<Props> = ({ onSelect, onCancel }) => {
+  const { t } = useTranslation();
+
   const options = [
-    { key: '7-9', label: '7–9 лет' },
-    { key: '10-13', label: '10–13 лет' },
-    { key: '14-18', label: '14–18 лет' },
-    { key: '19-22', label: '19–22 года' },
-    { key: '23+', label: '23+ лет' },
+    { key: '7-9', label: t('age-select.options.7-9') },
+    { key: '10-13', label: t('age-select.options.10-13') },
+    { key: '14-18', label: t('age-select.options.14-18') },
+    { key: '19-22', label: t('age-select.options.19-22') },
+    { key: '23+', label: t('age-select.options.23+') },
   ];
+
   const emojiMap: Record<string, string> = {
     '7-9': '🧒',
     '10-13': '👦',
@@ -27,10 +31,10 @@ export const AgeSelectAfterConsent: React.FC<Props> = ({ onSelect, onCancel }) =
 
   useEffect(() => {
     if (selected) {
-      const t = setTimeout(() => {
+      const tmr = setTimeout(() => {
         onSelect(selected);
-      }, 300); // show highlight briefly before continuing
-      return () => clearTimeout(t);
+      }, 300); // небольшая задержка подсветки
+      return () => clearTimeout(tmr);
     }
   }, [selected, onSelect]);
 
@@ -38,15 +42,24 @@ export const AgeSelectAfterConsent: React.FC<Props> = ({ onSelect, onCancel }) =
     <div className="min-h-screen bg-gradient-to-br from-primary/5 to-accent/5 p-4">
       <div className="max-w-3xl mx-auto">
         <div className="flex items-center gap-4 mb-6">
-          <Button variant="ghost" size="icon" onClick={() => onCancel && onCancel()} aria-label="Назад">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onCancel && onCancel()}
+            aria-label={t('age-select.back')}
+          >
             <ArrowLeft className="h-6 w-6" />
           </Button>
         </div>
 
-        <div className="rounded-2xl p-4"> 
+        <div className="rounded-2xl p-4">
           <div className="mb-3">
-            <h2 className="text-xl font-semibold text-center">Сколько лет вашему ребёнку?</h2>
-            <p className="text-xs text-muted-foreground text-center mt-2">Выберите одну из категорий возраста</p>
+            <h2 className="text-xl font-semibold text-center">
+              {t('age-select.title')}
+            </h2>
+            <p className="text-xs text-muted-foreground text-center mt-2">
+              {t('age-select.subtitle')}
+            </p>
           </div>
 
           <div className="flex flex-col gap-4 max-w-sm mx-auto">
@@ -58,7 +71,9 @@ export const AgeSelectAfterConsent: React.FC<Props> = ({ onSelect, onCancel }) =
                   variant="outline"
                   onClick={() => setSelected(opt.key)}
                   className={`w-full flex flex-row items-center justify-start gap-4 py-8 px-5 text-left rounded-2xl ${
-                    isSelected ? 'border-blue-500 border-2 shadow-lg' : 'border-gray-200'
+                    isSelected
+                      ? 'border-blue-500 border-2 shadow-lg'
+                      : 'border-gray-200'
                   }`}
                 >
                   <div className="text-2xl mr-3">{emojiMap[opt.key]}</div>

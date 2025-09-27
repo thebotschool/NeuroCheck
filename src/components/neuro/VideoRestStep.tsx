@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Play, ArrowRight, RotateCcw, Volume2, VolumeX } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface VideoRestStepProps {
   onContinue: () => void;
@@ -11,6 +12,8 @@ interface VideoRestStepProps {
 }
 
 export const VideoRestStep = ({ onContinue, vimeoVideoId, durationMs = 120000, devMode = false }: VideoRestStepProps) => {
+  const { t } = useTranslation();
+
   const [showContinueButton, setShowContinueButton] = useState(false);
   const [remainingMs, setRemainingMs] = useState(durationMs);
   const [player, setPlayer] = useState<any>(null);
@@ -41,7 +44,7 @@ export const VideoRestStep = ({ onContinue, vimeoVideoId, durationMs = 120000, d
       player.setVolume(isMuted ? 0 : 0.5);
 
       const onEnded = () => {
-        player.getDuration().then((duration) => {
+        player.getDuration().then((duration: number) => {
           player.setCurrentTime(duration - 0.1);
           player.pause();
         });
@@ -78,10 +81,10 @@ export const VideoRestStep = ({ onContinue, vimeoVideoId, durationMs = 120000, d
         <CardHeader className="text-center">
           <CardTitle className="flex items-center justify-center gap-2">
             <Play className="h-6 w-6" />
-            Видео-перерыв
+            {t('videoRest.title')}
           </CardTitle>
           <CardDescription>
-            Посмотрите видео, чтобы отдохнуть и восстановить концентрацию.
+            {t('videoRest.subtitle')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -100,25 +103,32 @@ export const VideoRestStep = ({ onContinue, vimeoVideoId, durationMs = 120000, d
               size="icon"
               onClick={() => setIsMuted(prev => !prev)}
               className="absolute bottom-2 right-2 rounded-full bg-black text-white hover:bg-gray-800"
+              aria-label={isMuted ? t('videoRest.unmute') : t('videoRest.mute')}
             >
               {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
             </Button>
           </div>
           <div className="text-center space-y-4">
             <p className="text-muted-foreground">
-              Наслаждайтесь перерывом. Кнопка разблокируется по таймеру
+              {t('videoRest.enjoy')}
             </p>
-            <div className="text-xs text-muted-foreground">Осталось: <span className="font-mono">{String(Math.floor(remainingMs/60000)).padStart(2,'0')}:{String(Math.floor((remainingMs%60000)/1000)).padStart(2,'0')}</span></div>
+            <div className="text-xs text-muted-foreground">
+              {t('videoRest.remaining')}{' '}
+              <span className="font-mono">
+                {String(Math.floor(remainingMs/60000)).padStart(2,'0')}:
+                {String(Math.floor((remainingMs%60000)/1000)).padStart(2,'0')}
+              </span>
+            </div>
             
             {!showContinueButton && (
               <div className="space-y-3">
                 <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                   <RotateCcw className="h-4 w-4 animate-spin" />
-                  Кнопка "Продолжить" появится через {Math.round(durationMs / 60000)} мин...
+                  {t('videoRest.waitButton', {minutes: Math.round(durationMs / 60000)})}
                 </div>
                 {showDevControls && (
                   <Button variant="outline" onClick={onContinue}>
-                    Перейти дальше (для тестирования)
+                    {t('videoRest.devSkip')}
                   </Button>
                 )}
               </div>
@@ -129,14 +139,16 @@ export const VideoRestStep = ({ onContinue, vimeoVideoId, durationMs = 120000, d
             <div className="space-y-4">
               <div className="text-center p-4 bg-accent/10 rounded-lg">
                 <p className="font-semibold text-accent-foreground">
-                  Отдохнули? Отлично!
+                  {t('videoRest.rested')}
                 </p>
-                <p className="text-sm text-muted-foreground">Переходим к следующему тесту</p>
+                <p className="text-sm text-muted-foreground">
+                  {t('videoRest.nextTest')}
+                </p>
               </div>
               
               <Button onClick={onContinue} className="w-full" size="lg">
                 <ArrowRight className="mr-2 h-4 w-4" />
-                Я отдохнул, продолжить
+                {t('videoRest.continue')}
               </Button>
             </div>
           )}

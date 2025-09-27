@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+
 import { UserDataStep } from '@/components/neuro/UserDataStep';
 import { TCPTest } from '@/components/neuro/TCPTest';
 import { GoNoGoTest } from '@/components/neuro/GoNoGoTest';
@@ -21,6 +23,7 @@ import { Copy } from 'lucide-react';
 type TokenState = 'verifying' | 'valid' | 'invalid' | 'requires_email';
 
 const NeuroCheck = () => {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const [tokenState, setTokenState] = useState<TokenState>('verifying');
   const [verificationError, setVerificationError] = useState<string | null>(null);
@@ -44,15 +47,6 @@ const NeuroCheck = () => {
   const { test, loading, updateTestWithUserData, saveTCPResults, saveGoNoGoResults, saveMemoryResults, completeTest, getTestByToken } = useTestSession();
   const isMobile = useIsMobile();
 
-  console.log('NeuroCheck Render State:', {
-    tokenState,
-    loading,
-    testStarted,
-    isMobile,
-    test: !!test,
-    verificationError,
-  });
-
   const handleBackToStart = useCallback(() => {
     setTestStarted(false);
   }, []);
@@ -63,7 +57,7 @@ const NeuroCheck = () => {
 
     if (!token) {
       setTokenState('invalid');
-      setVerificationError('Токен не найден.');
+      setVerificationError(t('neuro.errors.tokenNotFound'));
       return;
     }
 
@@ -80,20 +74,20 @@ const NeuroCheck = () => {
           }
         } else {
           setTokenState('invalid');
-          setVerificationError(data.error || 'Неизвестная ошибка проверки токена.');
+          setVerificationError(data.error || t('neuro.errors.unknownTokenError'));
         }
       })
       .catch(() => {
         setTokenState('invalid');
-        setVerificationError('Не удалось связаться с сервером.');
+        setVerificationError(t('neuro.errors.serverError'));
       });
-  }, [searchParams, getTestByToken]);
+  }, [searchParams, getTestByToken, t]);
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const token = searchParams.get('token');
     if (!userEmail || !token) {
-      toast({ title: 'Ошибка', description: 'Введите корректный email', variant: 'destructive' });
+      toast({ title: t('common.error'), description: t('neuro.errors.invalidEmail'), variant: 'destructive' });
       return;
     }
 
@@ -110,10 +104,10 @@ const NeuroCheck = () => {
         setTokenState('valid');
         getTestByToken(token);
       } else {
-        toast({ title: 'Ошибка', description: data.error || 'Не удалось сохранить email', variant: 'destructive' });
+        toast({ title: t('common.error'), description: data.error || t('neuro.errors.saveEmailFailed'), variant: 'destructive' });
       }
     } catch (error) {
-      toast({ title: 'Ошибка', description: 'Произошла ошибка сети', variant: 'destructive' });
+      toast({ title: t('common.error'), description: t('neuro.errors.networkError'), variant: 'destructive' });
     } finally {
       setIsSubmittingEmail(false);
     }
@@ -134,8 +128,8 @@ const NeuroCheck = () => {
         setTestStarted(true);
       } else {
         setTokenState('invalid');
-        setVerificationError(data.reason || 'Не удалось активировать токен.');
-        toast({ title: 'Ошибка', description: data.reason || 'Не удалось активировать токен.', variant: 'destructive' });
+        setVerificationError(data.reason || t('neuro.errors.activateTokenFailed'));
+        toast({ title: t('neuro.errors.error'), description: data.reason || t('neuro.errors.activateTokenFailed'), variant: 'destructive' });
         setIsStarting(false);
       }
     }
@@ -188,7 +182,7 @@ const NeuroCheck = () => {
   };
 
   if (isMobile) {
-    return <MobileBlocked onBackToLanding={() => {}} />;
+    return <MobileBlocked onBackToLanding={() => { }} />;
   }
 
   if (tokenState === 'verifying' || loading) {
@@ -196,7 +190,11 @@ const NeuroCheck = () => {
   }
 
   if (tokenState === 'invalid') {
-    return <div className="min-h-screen flex items-center justify-center">Ссылка недействительна или устарела. {verificationError && `(${verificationError})`}</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        {t('neuro.invalidLink', { error: verificationError })}
+      </div>
+    );
   }
 
   if (tokenState === 'requires_email') {
@@ -205,15 +203,13 @@ const NeuroCheck = () => {
         <DialogContent className="sm:max-w-[425px]">
           <form onSubmit={handleEmailSubmit}>
             <DialogHeader>
-              <DialogTitle>Введите ваш Email</DialogTitle>
-              <DialogDescription>
-                Этот email необходим для отправки результатов тестирования. Мы не будем использовать его для других целей.
-              </DialogDescription>
+              <DialogTitle>{t('neuro.emailModal.title')}</DialogTitle>
+              <DialogDescription>{t('neuro.emailModal.description')}</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="email" className="text-right">
-                  Email
+                  {t('neuro.emailModal.emailLabel')}
                 </Label>
                 <Input
                   id="email"
@@ -227,7 +223,7 @@ const NeuroCheck = () => {
             </div>
             <DialogFooter>
               <Button type="submit" disabled={isSubmittingEmail}>
-                {isSubmittingEmail ? 'Сохранение...' : 'Сохранить и продолжить'}
+                {isSubmittingEmail ? t('neuro.emailModal.saving') : t('neuro.emailModal.submit')}
               </Button>
             </DialogFooter>
           </form>
@@ -246,35 +242,37 @@ const NeuroCheck = () => {
         return (
           <div className="min-h-screen bg-white text-gray-900 px-6 py-12 flex items-center justify-center">
             <section className="max-w-2xl mx-auto space-y-6 text-left">
-              <h2 className="text-2xl font-semibold text-center">Памятка для родителей</h2>
+              <h2 className="text-2xl font-semibold text-center">{t('neuro.parents.title')}</h2>
               <div className="space-y-4 p-6 border rounded-lg">
-                <p className="font-semibold">Что это?</p>
+                <p className="font-semibold">{t('neuro.parents.whatIs')}</p>
                 <ul className="list-disc list-inside space-y-2 text-sm">
-                  <li>Это скрининг, а не медицинская диагностика.</li>
-                  <li>Мы не ставим диагнозы, а показываем зоны гордости, развития и возможные трудности в учебе.</li>
-                  <li>Итог — отчёт для вас и учителей с конкретными рекомендациями.</li>
+                  <li>{t('neuro.parents.whatIs.1')}</li>
+                  <li>{t('neuro.parents.whatIs.2')}</li>
+                  <li>{t('neuro.parents.whatIs.3')}</li>
                 </ul>
-                <p className="font-semibold">Сколько времени займёт?</p>
+                <p className="font-semibold">{t('neuro.parents.time')}</p>
                 <ul className="list-disc list-inside space-y-2 text-sm">
-                  <li>Всего около 15 минут.</li>
-                  <li>Между тестами будут короткие мультфильмы для отдыха.</li>
+                  <li>{t('neuro.parents.time.1')}</li>
+                  <li>{t('neuro.parents.time.2')}</li>
                 </ul>
-                <p className="font-semibold">Кто проходит?</p>
+                <p className="font-semibold">{t('neuro.parents.who')}</p>
                 <ul className="list-disc list-inside space-y-2 text-sm">
-                  <li>Скрининг проходит сам ребёнок.</li>
-                  <li>Ваша помощь — только в начале: запустить компьютер, проверить интернет и тишину.</li>
-                  <li>Важно: не подсказывать во время заданий.</li>
+                  <li>{t('neuro.parents.who.1')}</li>
+                  <li>{t('neuro.parents.who.2')}</li>
+                  <li>{t('neuro.parents.who.3')}</li>
                 </ul>
-                <p className="font-semibold">Что подготовить?</p>
+                <p className="font-semibold">{t('neuro.parents.prepare')}</p>
                 <ul className="list-disc list-inside space-y-2 text-sm">
-                  <li>Тихое, спокойное место.</li>
-                  <li>Компьютер/ноутбук с клавиатурой и мышкой.</li>
-                  <li>Удобный стол и стул.</li>
-                  <li>Перед началом — сходить в туалет, попить воды.</li>
+                  <li>{t('neuro.parents.prepare.1')}</li>
+                  <li>{t('neuro.parents.prepare.2')}</li>
+                  <li>{t('neuro.parents.prepare.3')}</li>
+                  <li>{t('neuro.parents.prepare.4')}</li>
                 </ul>
               </div>
               <div className="text-center">
-                <Button onClick={() => setInstructionStep('children')} size="lg">Далее</Button>
+                <Button onClick={() => setInstructionStep('children')} size="lg">
+                  {t('neuro.parents.next')}
+                </Button>
               </div>
             </section>
           </div>
@@ -285,42 +283,42 @@ const NeuroCheck = () => {
         return (
           <div className="min-h-screen bg-white text-gray-900 px-6 py-12 flex items-center justify-center">
             <section className="max-w-2xl mx-auto space-y-6 text-left">
-              <h2 className="text-2xl font-semibold text-center">Памятка для ребёнка</h2>
+              <h2 className="text-2xl font-semibold text-center">{t('neuro.children.title')}</h2>
               <div className="space-y-4 p-6 border rounded-lg">
-                  <p className="font-semibold">✨ Тебе предстоит пройти скрининг!</p>
-                  <ul className="list-disc list-inside space-y-2 text-sm">
-                      <li>Это не экзамен и не контрольная. Здесь нельзя «плохо» или «хорошо» сделать.</li>
-                      <li>Мы просто посмотрим, как работает твое внимание и память.</li>
-                  </ul>
-                  <p className="font-semibold">Что будет?</p>
-                  <ul className="list-disc list-inside space-y-2 text-sm">
-                    <li>У тебя будет три задания на компьютере.</li>
-                    <li>Одно — нажимать клавишу, когда увидишь букву.</li>
-                    <li>Второе — нажимать или не нажимать в игре с картинками.</li>
-                    <li>Третье — запомнить картинки и расставить их потом в нужном порядке.</li>
-                  </ul>
-                  <p className="font-semibold">Что нужно сделать перед началом?</p>
-                  <ul className="list-disc list-inside space-y-2 text-sm">
-                    <li>Сесть удобно за стол.</li>
-                    <li>Чтобы было тихо, никто не отвлекал.</li>
-                    <li>Проверить, что всё работает на компьютере.</li>
-                    <li>Попить воды и сходить в туалет.</li>
-                  </ul>
-                  <p className="font-semibold">Важно помнить:</p>
-                  <ul className="list-disc list-inside space-y-2 text-sm">
-                    <li>Ты делаешь всё сам.</li>
-                    <li>Никто не будет подсказывать.</li>
-                    <li>Главное — постараться и пройти до конца.</li>
-                  </ul>
+                <p className="font-semibold">{t('neuro.children.intro')}</p>
+                <ul className="list-disc list-inside space-y-2 text-sm">
+                  <li>{t('neuro.children.intro.1')}</li>
+                  <li>{t('neuro.children.intro.2')}</li>
+                </ul>
+                <p className="font-semibold">{t('neuro.children.what')}</p>
+                <ul className="list-disc list-inside space-y-2 text-sm">
+                  <li>{t('neuro.children.what.1')}</li>
+                  <li>{t('neuro.children.what.2')}</li>
+                  <li>{t('neuro.children.what.3')}</li>
+                  <li>{t('neuro.children.what.4')}</li>
+                </ul>
+                <p className="font-semibold">{t('neuro.children.prepare')}</p>
+                <ul className="list-disc list-inside space-y-2 text-sm">
+                  <li>{t('neuro.children.prepare.1')}</li>
+                  <li>{t('neuro.children.prepare.2')}</li>
+                  <li>{t('neuro.children.prepare.3')}</li>
+                  <li>{t('neuro.children.prepare.4')}</li>
+                </ul>
+                <p className="font-semibold">{t('neuro.children.remember')}</p>
+                <ul className="list-disc list-inside space-y-2 text-sm">
+                  <li>{t('neuro.children.remember.1')}</li>
+                  <li>{t('neuro.children.remember.2')}</li>
+                  <li>{t('neuro.children.remember.3')}</li>
+                </ul>
               </div>
               <div className="text-center space-y-2">
                 <Button onClick={handleStartTest} size="lg" disabled={isStarting}>
-                  {isStarting ? 'Загрузка...' : 'Начать тест'}
+                  {isStarting ? t('common.loading') : t('neuro.children.startTest')}
                 </Button>
                 <p className="text-xs text-gray-500">
-                  Нажимая на кнопку, вы принимаете{' '}
+                  {t('neuro.children.consentText')}{' '}
                   <Link to="/privacy" className="underline">
-                    согласие на обработку персональных данных
+                    {t('neuro.children.consent')}
                   </Link>
                 </p>
               </div>
@@ -332,19 +330,17 @@ const NeuroCheck = () => {
       const testUrl = window.location.href;
       const copyToClipboard = () => {
         navigator.clipboard.writeText(testUrl).then(() => {
-          toast({ title: 'Ссылка скопирована!' });
+          toast({ title: t('neuro.timeBlocked.copy') });
         });
       };
 
       return (
         <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
           <div className="text-center max-w-md p-8 bg-white rounded-lg shadow-md">
-            <h2 className="text-2xl font-bold">Тестирование временно недоступно</h2>
-            <p className="mt-4 text-muted-foreground">
-              Мы открываем скрининг только с утра — с 6 до 12 часов по вашему местному времени. В это время дети бодрее, внимание свежее, и результаты получаются честнее.
-            </p>
+            <h2 className="text-2xl font-bold">{t('neuro.timeBlocked.title')}</h2>
+            <p className="mt-4 text-muted-foreground">{t('neuro.timeBlocked.text')}</p>
             <div className="mt-6 p-4 bg-gray-100 rounded-lg">
-              <p className="font-semibold text-gray-800">Пожалуйста, сохраните вашу уникальную ссылку на тест и вернитесь в указанное время:</p>
+              <p className="font-semibold text-gray-800">{t('neuro.timeBlocked.saveLink')}</p>
               <div className="mt-2 flex items-center gap-2">
                 <Input type="text" readOnly value={testUrl} className="flex-1" />
                 <Button variant="outline" size="icon" onClick={copyToClipboard}>
@@ -354,9 +350,7 @@ const NeuroCheck = () => {
             </div>
             {devMode && (
               <div className="mt-6">
-                <Button onClick={() => setTimeBypassed(true)}>
-                  Продолжить в режиме разработки
-                </Button>
+                <Button onClick={() => setTimeBypassed(true)}>{t('neuro.timeBlocked.dev')}</Button>
               </div>
             )}
           </div>
@@ -369,44 +363,37 @@ const NeuroCheck = () => {
     let content: JSX.Element;
     switch (currentStep) {
       case 'user-data':
-        if (!test) {
-          content = <LoadingScreen />;
-        } else {
-          content = (
-            <UserDataStep
-              onSuccess={handleUserDataSuccess}
-              email={test.email ?? ''} // Pass an empty string if email is null
-              onBack={handleBackToStart}
-            />
-          );
-        }
+        content = test ? (
+          <UserDataStep
+            onSuccess={handleUserDataSuccess}
+            email={test.email ?? ''}
+            onBack={handleBackToStart}
+          />
+        ) : (
+          <LoadingScreen />
+        );
         break;
-
       case 'tcp-test':
         content = <TCPTest onComplete={handleTCPComplete} onSkip={handleTCPComplete} devMode={devMode} test={test} />;
         break;
-
       case 'gonogo-test':
         content = <GoNoGoTest onComplete={handleGoNoGoComplete} devMode={devMode} />;
         break;
-
       case 'video-rest':
         content = <VideoRestStep onContinue={handleVideoRestContinue} vimeoVideoId={vimeoVideoId} devMode={devMode} />;
         break;
-
       case 'memory-test':
         content = <MemoryTest onComplete={handleMemoryComplete} age={test?.age ?? 3} devMode={devMode} />;
         break;
-
       case 'results':
         if (!isTestReadyForResults || !test) {
           content = <LoadingScreen />;
         } else if (!tcpResults) {
-          content = <div>Ошибка: Результаты TCP-теста отсутствуют.</div>;
+          content = <div>{t('neuro.error.tcp')}</div>;
         } else if (!gonogoResults) {
-          content = <div>Ошибка: Результаты Go/No-Go теста отсутствуют.</div>;
+          content = <div>{t('neuro.error.gonogo')}</div>;
         } else if (!memoryResults) {
-          content = <div>Ошибка: Результаты теста на память отсутствуют.</div>;
+          content = <div>{t('neuro.error.memory')}</div>;
         } else {
           content = (
             <ResultsStep
@@ -419,21 +406,22 @@ const NeuroCheck = () => {
           );
         }
         break;
-
       default:
-        content = <div>Неизвестный шаг тестирования: {currentStep}</div>;
+        content = <div>{t('neuro.unknownStep', { step: currentStep })}</div>;
     }
 
     return (
       <div>
-        <div className="transition-all duration-500 ease-in-out">
-          {content}
-        </div>
+        <div className="transition-all duration-500 ease-in-out">{content}</div>
       </div>
     );
   }
 
-  return <div className="min-h-screen flex items-center justify-center">Неожиданное состояние компонента.</div>;
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <p>{t('neuro.unexpectedState')}</p>
+    </div>
+  );
 };
 
 export default NeuroCheck;

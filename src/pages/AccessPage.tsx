@@ -1,26 +1,30 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
-import { CreditCard, Gift, ArrowLeft } from 'lucide-react';
+import { CreditCard, Gift } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import Footer from '@/components/Footer';
-
-const consentPoints = [
-  'Добровольно предоставляю ИП Кунявский Юрий (далее — Оператор) персональные данные (email, возраст школьника, результаты скрининга) для предоставления услуги **NeuroCheck — цифровой чекап учебных функций школьника**, включая проведение скрининга, формирование отчёта и отправку рекомендаций.',
-  'Соглашаюсь на обработку, хранение, систематизацию, использование и передачу (при необходимости, с соблюдением конфиденциальности) моих персональных данных в соответствии с Федеральным законом РФ №152-ФЗ "О персональных данных".',
-  'Разрешаю обработку данных школьника (возраст, результаты тестов), предоставленных мной как законным представителем, для целей формирования отчёта и рекомендаций, соответствующих ФГОС.',
-  'Подтверждаю, что ознакомлен(а) с Политикой конфиденциальности и Публичной офертой на сайте neurocheck.ru, и принимаю их условия.',
-  'Даю согласие на получение информационных сообщений (например, отчёта, уведомлений о новых функциях) на указанный email. Я могу отозвать это согласие, написав на support@neurocheck.ru.',
-  'Понимаю, что данные обрабатываются с использованием защищённых технологий, хранятся не более 12 месяцев (или иного срока, указанного в Политике конфиденциальности) и не передаются третьим лицам без моего согласия, за исключением случаев, предусмотренных законом.',
-];
+import Header from '@/components/Header';
+import BackButton from "@/components/BackButton"
 
 export default function AccessPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
+  const consentPoints = [
+    t('accessPage.consent.point1'),
+    t('accessPage.consent.point2'),
+    t('accessPage.consent.point3'),
+    t('accessPage.consent.point4'),
+    t('accessPage.consent.point5'),
+    t('accessPage.consent.point6'),
+  ];
+
   const [promoCode, setPromoCode] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
   const [checkedState, setCheckedState] = useState(new Array(consentPoints.length).fill(false));
@@ -39,8 +43,8 @@ export default function AccessPage() {
     
     if (!promoCode.trim()) {
       toast({
-        title: 'Ошибка',
-        description: 'Пожалуйста, введите промокод',
+        title: t('common.error'),
+        description: t('accessPage.toasts.enterPromo'),
         variant: 'destructive',
       });
       return;
@@ -61,22 +65,22 @@ export default function AccessPage() {
 
       if (data.ok) {
         toast({
-          title: 'Успешно!',
-          description: 'Промокод принят.',
+          title: t('common.success'),
+          description: t('accessPage.toasts.successDescription'),
         });
         navigate(`/test?token=${data.token}`);
       } else {
         toast({
-          title: 'Ошибка промокода',
-          description: data.error || 'Не удалось применить промокод.',
+          title: t('accessPage.toasts.errorPromo'),
+          description: data.error || t('accessPage.toasts.errorPromoDescription'),
           variant: 'destructive',
         });
       }
     } catch (error) {
       console.error('Error consuming promo code:', error);
       toast({
-        title: 'Сетевая ошибка',
-        description: 'Не удалось связаться с сервером. Попробуйте еще раз.',
+        title: t('accessPage.toasts.networkError'),
+        description: t('accessPage.toasts.networkErrorDescription'),
         variant: 'destructive',
       });
     } finally {
@@ -86,38 +90,28 @@ export default function AccessPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 to-accent/5 flex flex-col">
+      <Header />
       <main className="flex-grow p-4">
         <div className="max-w-2xl mx-auto">
           {/* Кнопка назад */}
-          <div className="mb-6">
-            <Button 
-              variant="ghost" 
-              onClick={() => navigate('/')}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              На главную
-            </Button>
-          </div>
+          <BackButton/>
 
           {/* Заголовок */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold mb-2">Доступ к тестированию</h1>
-            <p className="text-muted-foreground">
-              Выберите способ получения доступа к NeuroCheck
-            </p>
+            <h1 className="text-3xl font-bold mb-2">{t('accessPage.title')}</h1>
+            <p className="text-muted-foreground">{t('accessPage.subtitle')}</p>
           </div>
 
-          {/* Табы с выбором */}
+          {/* Табы */}
           <Tabs defaultValue="payment" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="payment" className="flex items-center gap-2">
                 <CreditCard className="h-4 w-4" />
-                Оплата
+                {t('accessPage.tabs.payment')}
               </TabsTrigger>
               <TabsTrigger value="promo" className="flex items-center gap-2">
                 <Gift className="h-4 w-4" />
-                Промокод
+                {t('accessPage.tabs.promo')}
               </TabsTrigger>
             </TabsList>
 
@@ -127,31 +121,30 @@ export default function AccessPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <CreditCard className="h-5 w-5" />
-                    Оплата тестирования
+                    {t('accessPage.payment.title')}
                   </CardTitle>
-                  <CardDescription>
-                    Стоимость: 850 ₽ • Время прохождения: ~15 минут
-                  </CardDescription>
+                  <CardDescription>{t('accessPage.payment.description')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="bg-blue-50 p-4 rounded-lg">
-                    <h4 className="font-semibold text-blue-900 mb-2">Что входит в тестирование:</h4>
+                    <h4 className="font-semibold text-blue-900 mb-2">
+                      {t('accessPage.payment.includes.title')}
+                    </h4>
                     <ul className="text-sm text-blue-800 space-y-1">
-                      <li>• Тест на внимание (TCP)</li>
-                      <li>• Тест на самоконтроль (Go/No-Go)</li>
-                      <li>• Тест на память</li>
-                      <li>• Персональный отчет с рекомендациями</li>
-                      <li>• Отправка результатов на email</li>
+                      <li>• {t('accessPage.payment.includes.item1')}</li>
+                      <li>• {t('accessPage.payment.includes.item2')}</li>
+                      <li>• {t('accessPage.payment.includes.item3')}</li>
+                      <li>• {t('accessPage.payment.includes.item4')}</li>
+                      <li>• {t('accessPage.payment.includes.item5')}</li>
                     </ul>
                   </div>
-                  
                   <Button 
                     onClick={() => navigate('/payment')} 
                     className="w-full"
                     size="lg"
                     disabled={!allChecked}
                   >
-                    Перейти к оплате
+                    {t('accessPage.payment.button')}
                   </Button>
                 </CardContent>
               </Card>
@@ -163,20 +156,18 @@ export default function AccessPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Gift className="h-5 w-5" />
-                    Промокод
+                    {t('accessPage.promo.title')}
                   </CardTitle>
-                  <CardDescription>
-                    Если у вас есть промокод, введите его ниже
-                  </CardDescription>
+                  <CardDescription>{t('accessPage.promo.description')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handlePromoCodeSubmit} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="promo-code">Промокод</Label>
+                      <Label htmlFor="promo-code">{t('accessPage.promo.label')}</Label>
                       <Input
                         id="promo-code"
                         type="text"
-                        placeholder="Введите промокод"
+                        placeholder={t('accessPage.promo.placeholder') || ''}
                         value={promoCode}
                         onChange={(e) => setPromoCode(e.target.value)}
                         disabled={isVerifying}
@@ -189,14 +180,13 @@ export default function AccessPage() {
                       disabled={isVerifying || !allChecked}
                       size="lg"
                     >
-                      {isVerifying ? 'Проверка...' : 'Применить промокод'}
+                      {isVerifying ? t('accessPage.promo.button.checking') : t('accessPage.promo.button.apply')}
                     </Button>
                   </form>
 
                   <div className="mt-4 p-3 bg-gray-50 rounded-lg">
                     <p className="text-sm text-gray-600">
-                      <strong>Примечание:</strong> Промокод предоставляет бесплатный доступ к тестированию. 
-                      Если у вас нет промокода, вы можете приобрести доступ через оплату.
+                      <strong>{t('accessPage.promo.note')}</strong> {t('accessPage.promo.note.text')}
                     </p>
                   </div>
                 </CardContent>
@@ -208,10 +198,8 @@ export default function AccessPage() {
           <div className="mt-8">
             <Card>
               <CardHeader>
-                <CardTitle>Согласие на обработку персональных данных</CardTitle>
-                <CardDescription>
-                  Нажимая кнопку "Оплатить" или "Применить промокод", я, как Заказчик (родитель или законный представитель школьника), подтверждаю, что:
-                </CardDescription>
+                <CardTitle>{t('accessPage.consent.title')}</CardTitle>
+                <CardDescription>{t('accessPage.consent.description')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {consentPoints.map((point, index) => (
@@ -222,7 +210,7 @@ export default function AccessPage() {
                       onCheckedChange={() => handleCheckboxChange(index)}
                     />
                     <Label htmlFor={`consent-${index}`} className="text-sm font-normal text-muted-foreground">
-                      {point.replace(/\*\*/g, '')}
+                      {point}
                     </Label>
                   </div>
                 ))}
@@ -230,11 +218,9 @@ export default function AccessPage() {
             </Card>
           </div>
 
-          {/* Дополнительная информация */}
+          {/* Контакты */}
           <div className="mt-8 text-center">
-            <p className="text-sm text-muted-foreground">
-              Есть вопросы? Свяжитесь с нами по email: support@neurocheck.ru
-            </p>
+            <p className="text-sm text-muted-foreground">{t('accessPage.footer.contact')}</p>
           </div>
         </div>
       </main>

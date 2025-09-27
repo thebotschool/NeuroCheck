@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const SuccessPage = () => {
-  const [token, setToken] = useState(null);
-  const [email, setEmail] = useState(null);
-  const [error, setError] = useState(null);
+  const [token, setToken] = useState<string | null>(null);
+  const [email, setEmail] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [timedOut, setTimedOut] = useState(false);
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
 
   useEffect(() => {
     const clientId = localStorage.getItem('payment_client_id');
     if (!clientId) {
-      setError('Не удалось найти идентификатор платежа. Пожалуйста, проверьте свою электронную почту для получения ссылки на тест.');
+      setError(t('successPage.error.noClientId'));
       return;
     }
 
@@ -24,16 +26,15 @@ const SuccessPage = () => {
           setEmail(data.email);
         }
       } catch (e) {
-        console.error('Ошибка при получении токена:', e);
-        setError('Произошла ошибка при получении статуса платежа.');
+        console.error('Error fetching token:', e);
+        setError(t('successPage.error.fetchToken'));
       }
-    }, 3000); // Poll every 3 seconds
+    }, 3000);
 
     const timeout = setTimeout(() => {
       setTimedOut(true);
-    }, 60000); // 1 minute timeout
+    }, 60000);
 
-    // Cleanup function
     const cleanup = () => {
       clearInterval(pollingInterval);
       clearTimeout(timeout);
@@ -45,7 +46,7 @@ const SuccessPage = () => {
     }
 
     return cleanup;
-  }, [token, timedOut, error]); // Rerun effect if token changes (to cleanup)
+  }, [token, timedOut, error, t]);
 
   useEffect(() => {
     if (token && email) {
@@ -55,10 +56,10 @@ const SuccessPage = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, testUrl }),
+        body: JSON.stringify({ email, testUrl, lang: i18n.language }), // 👈 добавили язык
       });
     }
-  }, [token, email]);
+  }, [token, email, i18n.language]);
 
   useEffect(() => {
     if (token) {
@@ -66,31 +67,20 @@ const SuccessPage = () => {
     }
   }, [token, navigate]);
 
-
   const renderContent = () => {
     if (error) {
       return <p className="text-red-500">{error}</p>;
     }
     if (token) {
-      return (
-        <div>
-          <p className="text-gray-600">Перенаправляем на страницу теста...</p>
-        </div>
-      );
+      return <p className="text-gray-600">{t('successPage.redirect')}</p>;
     }
     if (timedOut) {
-      return (
-        <p className="text-gray-600">
-          Ссылка для тестирования была отправлена на вашу почту. Если вы не видите письма, проверьте папку 'Спам'.
-        </p>
-      );
+      return <p className="text-gray-600">{t('successPage.timedOut')}</p>;
     }
     return (
       <div>
-        <p className="text-gray-600">Пожалуйста, подождите, мы готовим вашу ссылку для тестирования...</p>
-        <p className="text-sm text-gray-500 mt-4">
-          Это может занять до минуты.
-        </p>
+        <p className="text-gray-600">{t('successPage.wait')}</p>
+        <p className="text-sm text-gray-500 mt-4">{t('successPage.waitNote')}</p>
       </div>
     );
   };
@@ -98,7 +88,11 @@ const SuccessPage = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md text-center">
-        <h2 className="text-2xl font-bold text-gray-900">Оплата прошла успешно!</h2>
+        <h2 className="text-2xl font-bold text-gray-900">
+          {error || timedOut
+            ? t('successPage.title.failure')
+            : t('successPage.title.success')}
+        </h2>
         {renderContent()}
       </div>
     </div>

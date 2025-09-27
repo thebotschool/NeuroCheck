@@ -7,6 +7,8 @@ import { GoNoGoResult } from '@/types/test';
 import { toast } from '@/hooks/use-toast';
 import { HandSwitchStep } from '@/components/neuro/HandSwitchStep';
 
+import { useTranslation } from 'react-i18next';
+
 interface GoNoGoTestProps {
   onComplete: (results: GoNoGoResult) => void;
   devMode?: boolean;
@@ -17,6 +19,8 @@ const STIMULUS_DURATION = 800; // ~800ms per stimulus
 const GO_RATIO = 0.8; // 80% Go
 
 export const GoNoGoTest = ({ onComplete, devMode = false }: GoNoGoTestProps) => {
+  const { t } = useTranslation();
+
   type Phase = 'instructions' | 'practiceRight' | 'testRight' | 'handSwitch' | 'practiceLeft' | 'testLeft' | 'complete';
   const [phase, setPhase] = useState<Phase>('instructions');
   const [currentStimulus, setCurrentStimulus] = useState<'green' | 'red' | ''>('');
@@ -127,7 +131,7 @@ export const GoNoGoTest = ({ onComplete, devMode = false }: GoNoGoTestProps) => 
     nextAllowedTsRef.current = now + REFRACTORY_MS;
   }, [phase, rightResponses, leftResponses, isTestPhase, isPracticePhase]);
 
-    
+
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyPress);
@@ -145,7 +149,7 @@ export const GoNoGoTest = ({ onComplete, devMode = false }: GoNoGoTestProps) => 
   const startTest = () => {
     toast({
       title: 'Go/No-Go',
-      description: 'Сначала блок ПРАВОЙ рукой (нажимайте пробел на зелёный), затем ЛЕВОЙ рукой',
+      description: t('gonogo.toast.start'),
     });
     setSequence(generateSequence(3));
     setPhase('practiceRight');
@@ -280,7 +284,7 @@ export const GoNoGoTest = ({ onComplete, devMode = false }: GoNoGoTestProps) => 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase]);
 
-  
+
 
   const handleSkip = () => {
     // Skip behavior: from right-hand phases → hand switch screen;
@@ -324,41 +328,48 @@ export const GoNoGoTest = ({ onComplete, devMode = false }: GoNoGoTestProps) => 
       activeSdRt: sdRt,
       meanDiffBetweenHands: meanDiff,
     };
-    }, [phase, rightResponses, leftResponses, rightFalseAlarmsCount, leftFalseAlarmsCount]);
+  }, [phase, rightResponses, leftResponses, rightFalseAlarmsCount, leftFalseAlarmsCount]);
 
   if (phase === 'instructions') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-accent/5 p-4">
         <Card className="w-full max-w-2xl">
           <CardHeader>
-            <CardTitle>Тест Go/No-Go (самоконтроль)</CardTitle>
-            <CardDescription>
-              Проверка способности к самоконтролю и торможению импульсов
-            </CardDescription>
+            <CardTitle>{t('gonogo.title')}</CardTitle>
+            <CardDescription>{t('gonogo.description')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-4">
-              <h3 className="font-semibold">Инструкция:</h3>
+              <h3 className="font-semibold">{t('gonogo.instruction.title')}</h3>
               <ul className="list-disc list-inside space-y-2 text-sm">
-                <li>Два блока по 1 минуте: сначала ПРАВОЙ рукой, затем ЛЕВОЙ.</li>
-                <li>Перед каждым блоком 2–3 пробы (не учитываются).</li>
-                <li><strong className="text-green-600">ЗЕЛЁНЫЙ круг</strong> — нажать пробел. <strong className="text-red-600">КРАСНЫЙ квадрат</strong> — не нажимать.</li>
-                <li>Соотношение Go/No-Go ≈ 80/20; длительность ~800 мс.</li>
+                <li>{t('gonogo.instruction.item1')}</li>
+                <li>{t('gonogo.instruction.item2')}</li>
+                <li>
+                  <strong className="text-green-600">{t('gonogo.instruction.greenLabel')}</strong>
+                  {' — '}
+                  {t('gonogo.instruction.greenAction')}.
+                  {' '}
+                  <strong className="text-red-600">{t('gonogo.instruction.redLabel')}</strong>
+                  {' — '}
+                  {t('gonogo.instruction.redAction')}.
+                </li>
+                <li>{t('gonogo.instruction.item4')}</li>
+
               </ul>
               <div className="flex justify-center gap-8">
                 <div className="text-center">
                   <div className="w-16 h-16 bg-green-500 rounded-full mx-auto mb-2"></div>
-                  <p className="text-sm font-semibold text-green-600">НАЖАТЬ</p>
+                  <p className="text-sm font-semibold text-green-600">{t('gonogo.visual.go')}</p>
                 </div>
                 <div className="text-center">
                   <div className="w-16 h-16 bg-red-500 mx-auto mb-2" style={{ borderRadius: 8 }}></div>
-                  <p className="text-sm font-semibold text-red-600">НЕ НАЖИМАТЬ</p>
+                  <p className="text-sm font-semibold text-red-600">{t('gonogo.visual.nogo')}</p>
                 </div>
               </div>
             </div>
             <div className="text-center">
               <Button onClick={startTest} size="lg">
-                Начать тест
+                {t('gonogo.start')}
               </Button>
             </div>
           </CardContent>
@@ -374,23 +385,42 @@ export const GoNoGoTest = ({ onComplete, devMode = false }: GoNoGoTestProps) => 
           {isTestPhase(phase) && (
             <Timer durationMs={BLOCK_DURATION_MS} className="absolute -top-6 right-0 text-xs text-muted-foreground" />
           )}
-          
+
           <p className="text-center text-sm text-muted-foreground mt-2">
-            {isPracticePhase(phase) ? 'Пробные стимулы' : 'Идёт блок'} · {phase === 'testRight' || phase === 'practiceRight' ? 'ПРАВАЯ рука' : 'ЛЕВАЯ рука'}
+            {isPracticePhase(phase)
+              ? t('gonogo.practice')
+              : t('gonogo.running')} · {phase === 'testRight' || phase === 'practiceRight'
+                ? t('gonogo.right-hand')
+                : t('gonogo.left-hand')}
           </p>
           {devMode && (
             <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-              <div className="flex justify-between"><span>Ошибки ложного отклика (Commissions)</span><span>{activeFalseAlarms}</span></div>
-              <div className="flex justify-between"><span>Ошибки пропуска (Omissions)</span><span>{activeMisses}</span></div>
-              <div className="flex justify-between"><span>Среднее время реакции (Mean RT), мс</span><span>{activeMeanRt}</span></div>
-              <div className="flex justify-between"><span>Вариативность реакции (SD RT), мс</span><span>{activeSdRt}</span></div>
+              <div className="flex justify-between">
+                <span>{t('gonogo.dev.false-alarms')}</span>
+                <span>{activeFalseAlarms}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>{t('gonogo.dev.omissions')}</span>
+                <span>{activeMisses}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>{t('gonogo.dev.mean-rt')}</span>
+                <span>{activeMeanRt}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>{t('gonogo.dev.sd-rt')}</span>
+                <span>{activeSdRt}</span>
+              </div>
               {(phase === 'testLeft' || phase === 'practiceLeft') && (
-                <div className="col-span-2 flex justify-between"><span>Разница среднего времени реакции между руками, мс</span><span>{meanDiffBetweenHands ?? 0}</span></div>
+                <div className="col-span-2 flex justify-between">
+                  <span>{t('gonogo.dev.diff-between-hands')}</span>
+                  <span>{meanDiffBetweenHands ?? 0}</span>
+                </div>
               )}
             </div>
           )}
         </div>
-        
+
         <div className="text-center">
           <div className="w-40 h-40 mx-auto flex items-center justify-center">
             {currentStimulus && (
@@ -409,11 +439,11 @@ export const GoNoGoTest = ({ onComplete, devMode = false }: GoNoGoTestProps) => 
             )}
           </div>
           <p className="mt-4 text-sm text-muted-foreground">
-            Зелёный - нажать пробел | Красный - не нажимать
+            {t('gonogo.hint')}
           </p>
           {devMode && (
             <div className="mt-6">
-              <Button variant="outline" onClick={handleSkip}>Пропустить</Button>
+              <Button variant="outline" onClick={handleSkip}>{t('gonogo.skip')}</Button>
             </div>
           )}
         </div>
@@ -437,14 +467,12 @@ export const GoNoGoTest = ({ onComplete, devMode = false }: GoNoGoTestProps) => 
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-accent/5 p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Тест завершён!</CardTitle>
-          <CardDescription>
-            Второй тест на самоконтроль успешно пройден
-          </CardDescription>
+          <CardTitle>{t('gonogo.completed.title')}</CardTitle>
+          <CardDescription>{t('gonogo.completed.description')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-center">
-            <p className="mb-4">Переходим к визуальному отдыху</p>
+            <p className="mb-4">{t('gonogo.completed.next')}</p>
             <div className="animate-pulse">
               <div className="h-2 bg-primary rounded w-full"></div>
             </div>

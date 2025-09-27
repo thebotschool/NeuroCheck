@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export const PaymentPage = () => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
+  const { t } = useTranslation();
 
   const handlePay = async () => {
     setLoading(true);
@@ -22,19 +24,19 @@ export const PaymentPage = () => {
         : await response.text();
 
       if (!response.ok) {
-        console.error('Ошибка от сервера:', data);
-        alert('Ошибка при создании платежа');
+        console.error('Server error:', data);
+        alert(t('paymentPage.error.server'));
         return;
       }
 
       if (data.confirmation_url) {
         window.location.href = data.confirmation_url;
       } else {
-        alert('Не удалось получить ссылку на оплату');
+        alert(t('paymentPage.error.noLink'));
       }
     } catch (e) {
-      console.error('Ошибка запроса:', e);
-      alert('Ошибка при создании оплаты');
+      console.error('Request error:', e);
+      alert(t('paymentPage.error.request'));
     } finally {
       setLoading(false);
     }
@@ -43,12 +45,14 @@ export const PaymentPage = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
-        <h2 className="text-2xl font-bold text-center text-gray-900">Оплата тестирования</h2>
+        <h2 className="text-2xl font-bold text-center text-gray-900">
+          {t('paymentPage.title')}
+        </h2>
         <input
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="Введите email"
+          placeholder={t('paymentPage.email.placeholder')}
           className="w-full p-2 border border-gray-300 rounded"
         />
         <button
@@ -56,7 +60,9 @@ export const PaymentPage = () => {
           className="w-full bg-black text-white py-2 rounded"
           disabled={loading || !email}
         >
-          {loading ? 'Создание оплаты...' : 'Перейти к оплате'}
+          {loading
+            ? t('paymentPage.button.loading')
+            : t('paymentPage.button.pay')}
         </button>
       </div>
     </div>

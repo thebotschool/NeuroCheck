@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { MemoryResult } from '@/types/test';
 import { toast } from '@/hooks/use-toast';
 import { Volume2, VolumeX } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface MemoryTestProps {
   onComplete: (results: MemoryResult) => void;
@@ -11,34 +12,33 @@ interface MemoryTestProps {
   devMode?: boolean;
 }
 
-const DISPLAY_PER_CARD_MS = 1500; // 1.5 seconds per card
-const DISTRACTOR_MS = 120000; // 2 minutes
-
+const DISPLAY_PER_CARD_MS = 1500;
+const DISTRACTOR_MS = 120000;
 const IMAGE_SRCS = Array.from({ length: 12 }, (_, i) => `/images/${i + 1}.png`);
 
 export const MemoryTest = ({ onComplete, age, devMode = false }: MemoryTestProps) => {
+  const { t } = useTranslation();
   type Phase = 'instructions' | 'memorize' | 'distract' | 'reconstruct' | 'complete';
   const [phase, setPhase] = useState<Phase>('instructions');
   const sequenceLength = useMemo(() => {
-    if (age === 5) return 12; // 23+
-    if (age === 4) return 10; // 19-22
-    if (age >= 2) return 8;  // 11-18
-    return 6; // 7-10
+    if (age === 5) return 12;
+    if (age === 4) return 10;
+    if (age >= 2) return 8;
+    return 6;
   }, [age]);
 
   const [targetSequence, setTargetSequence] = useState<string[]>([]);
   const [currentMemorizeIndex, setCurrentMemorizeIndex] = useState<number>(1);
   const [remainingDistractMs, setRemainingDistractMs] = useState<number>(DISTRACTOR_MS);
+  const [remainingFixationMs, setRemainingFixationMs] = useState<number>(0);
 
-  // Reconstruction state
   const [poolCards, setPoolCards] = useState<string[]>([]);
-  const [slots, setSlots] = useState<Array<string | null>>([]); // image srcs in order or null
+  const [slots, setSlots] = useState<Array<string | null>>([]);
   const [draggingSrc, setDraggingSrc] = useState<string | null>(null);
   const [reconstructionStart, setReconstructionStart] = useState<number | null>(null);
   const [firstDropSlot, setFirstDropSlot] = useState<number | null>(null);
   const [placementSequence, setPlacementSequence] = useState<number[]>([]);
 
-  // Vimeo player state
   const [player, setPlayer] = useState<any>(null);
   const [isMuted, setIsMuted] = useState(true);
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -54,22 +54,20 @@ export const MemoryTest = ({ onComplete, age, devMode = false }: MemoryTestProps
     setCurrentMemorizeIndex(1);
     setPhase('memorize');
     setPlacementSequence([]);
-    toast({ title: 'Запоминание последовательности', description: `Длина: ${sequenceLength}. Запоминайте порядок` });
+    toast({ title: t('memoryTest.memorize.title'), description: t('memoryTest.instructions.step1', { count: sequenceLength }) });
   };
 
   useEffect(() => {
     if (phase !== 'memorize') return;
     if (currentMemorizeIndex <= sequenceLength) {
-      const t = setTimeout(() => {
-        setCurrentMemorizeIndex(i => i + 1);
-      }, DISPLAY_PER_CARD_MS);
-      return () => clearTimeout(t);
+      const tmr = setTimeout(() => setCurrentMemorizeIndex(i => i + 1), DISPLAY_PER_CARD_MS);
+      return () => clearTimeout(tmr);
     } else {
-      const t = setTimeout(() => {
+      const tmr = setTimeout(() => {
         setPhase('distract');
         setRemainingDistractMs(DISTRACTOR_MS);
       }, DISPLAY_PER_CARD_MS);
-      return () => clearTimeout(t);
+      return () => clearTimeout(tmr);
     }
   }, [phase, currentMemorizeIndex, sequenceLength]);
 
@@ -118,14 +116,12 @@ export const MemoryTest = ({ onComplete, age, devMode = false }: MemoryTestProps
       script.src = 'https://player.vimeo.com/api/player.js';
       script.async = true;
       document.body.appendChild(script);
-
       script.onload = () => {
         if (iframeRef.current) {
           const vimeoPlayer = new (window as any).Vimeo.Player(iframeRef.current);
           setPlayer(vimeoPlayer);
         }
       };
-
       return () => {
         document.body.removeChild(script);
       };
@@ -133,9 +129,7 @@ export const MemoryTest = ({ onComplete, age, devMode = false }: MemoryTestProps
   }, [phase]);
 
   useEffect(() => {
-    if (player) {
-      player.setVolume(isMuted ? 0 : 0.5);
-    }
+    if (player) player.setVolume(isMuted ? 0 : 0.5);
   }, [player, isMuted]);
 
   const skipDistractorNow = () => {
@@ -159,8 +153,7 @@ export const MemoryTest = ({ onComplete, age, devMode = false }: MemoryTestProps
     const correctCards = placedIds.filter(src => targetSequence.includes(src)).length;
     const incorrectCards = sequenceLength - correctCards;
     const accuracy = sequenceLength > 0 ? (correctPositions / sequenceLength) * 100 : 0;
-
-    const results: MemoryResult = {
+    onComplete({
       totalCards: sequenceLength,
       correctCards,
       incorrectCards,
@@ -172,8 +165,7 @@ export const MemoryTest = ({ onComplete, age, devMode = false }: MemoryTestProps
       startPosition,
       reconstructionTime: reconstructionTimeMs,
       placementSequence,
-    };
-    onComplete(results);
+    });
   };
 
   const handleSkipTest = () => {
@@ -197,9 +189,7 @@ export const MemoryTest = ({ onComplete, age, devMode = false }: MemoryTestProps
   const onDropToSlot = (slotIndex: number) => {
     if (draggingSrc == null) return;
     if (slots[slotIndex] !== null) return;
-
     setPlacementSequence(prev => [...prev, slotIndex + 1]);
-
     setSlots(prev => {
       const next = [...prev];
       next[slotIndex] = draggingSrc;
@@ -221,46 +211,43 @@ export const MemoryTest = ({ onComplete, age, devMode = false }: MemoryTestProps
     });
   };
 
-  const renderCard = (src: string) => {
-    return (
-      <div
-        key={src}
-        draggable
-        onDragStart={() => onDragStart(src)}
-        onDragEnd={onDragEnd}
-        className="w-20 h-20 rounded-lg cursor-grab border-2 transition-all hover:border-primary/50 overflow-hidden"
-      >
-        <img src={src} alt="card" className="w-full h-full object-cover" />
-      </div>
-    );
-  };
+  const renderCard = (src: string) => (
+    <div
+      key={src}
+      draggable
+      onDragStart={() => onDragStart(src)}
+      onDragEnd={onDragEnd}
+      className="w-20 h-20 rounded-lg cursor-grab border-2 transition-all hover:border-primary/50 overflow-hidden"
+    >
+      <img src={src} alt="card" className="w-full h-full object-cover" />
+    </div>
+  );
 
+  // Renders for each phase
   if (phase === 'instructions') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-accent/5 p-4">
         <Card className="w-full max-w-2xl">
           <CardHeader>
-            <CardTitle>Тест на рабочую зрительную память</CardTitle>
-            <CardDescription>
-              Проверка способности запоминать и воспроизводить визуальную информацию
-            </CardDescription>
+            <CardTitle>{t('memoryTest.title')}</CardTitle>
+            <CardDescription>{t('memoryTest.description')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-4">
-              <h3 className="font-semibold">Инструкция:</h3>
+              <h3 className="font-semibold">{t('memoryTest.instructions.title')}</h3>
               <ul className="list-disc list-inside space-y-2 text-sm">
-                <li>На экране по очереди появятся {sequenceLength} картинок (по 1.5 сек каждая). Запоминайте порядок.</li>
-                <li>Затем будет 2-минутный отвлекающий этап.</li>
-                <li>После этого восстановите порядок, перетаскивая картинки в пустые ячейки сверху.</li>
+                <li>{t('memoryTest.instructions.step1', { count: sequenceLength })}</li>
+                <li>{t('memoryTest.instructions.step2')}</li>
+                <li>{t('memoryTest.instructions.step3')}</li>
               </ul>
             </div>
             <div className="text-center space-x-2">
               <Button onClick={startMemorizePhase} size="lg">
-                Начать тест
+                {t('memoryTest.button.start')}
               </Button>
               {devMode && (
                 <Button onClick={handleSkipTest} size="lg" variant="outline">
-                  Пропустить тест
+                  {t('memoryTest.button.skip')}
                 </Button>
               )}
             </div>
@@ -275,10 +262,8 @@ export const MemoryTest = ({ onComplete, age, devMode = false }: MemoryTestProps
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-primary/5 to-accent/5 p-4">
         <Card className="w-full max-w-6xl">
           <CardHeader className="text-center">
-            <CardTitle>Запомните последовательность</CardTitle>
-            <CardDescription>
-              Карточка {Math.min(currentMemorizeIndex, sequenceLength)} из {sequenceLength}
-            </CardDescription>
+            <CardTitle>{t('memoryTest.memorize.title')}</CardTitle>
+            <CardDescription>{t('memoryTest.memorize.card', { current: Math.min(currentMemorizeIndex, sequenceLength), total: sequenceLength })}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-flow-col auto-cols-fr gap-2 py-4">
@@ -287,9 +272,7 @@ export const MemoryTest = ({ onComplete, age, devMode = false }: MemoryTestProps
                 const isVisible = index < currentMemorizeIndex;
                 return (
                   <div key={index} className="aspect-square rounded-lg border-2 border-dashed border-muted-foreground/40 flex items-center justify-center overflow-hidden">
-                    {isVisible && cardSrc && (
-                      <img src={cardSrc} alt="card" className="w-full h-full object-cover" />
-                    )}
+                    {isVisible && cardSrc && <img src={cardSrc} alt="card" className="w-full h-full object-cover" />}
                   </div>
                 );
               })}
@@ -306,10 +289,8 @@ export const MemoryTest = ({ onComplete, age, devMode = false }: MemoryTestProps
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-primary/5 to-accent/5 p-4">
         <Card className="w-full max-w-6xl">
           <CardHeader className="text-center">
-            <CardTitle>Запомните последовательность</CardTitle>
-            <CardDescription>
-              Время на запоминание: {ss}
-            </CardDescription>
+            <CardTitle>{t('memoryTest.memorize.title')}</CardTitle>
+            <CardDescription>{t('memoryTest.fixation.remaining', { seconds: ss })}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-flow-col auto-cols-fr gap-2 py-4">
@@ -333,8 +314,8 @@ export const MemoryTest = ({ onComplete, age, devMode = false }: MemoryTestProps
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-accent/5 p-4">
         <Card className="w-full max-w-2xl">
           <CardHeader className="text-center">
-            <CardTitle>Отвлекающий этап</CardTitle>
-            <CardDescription>Осталось: {mm}:{ss}</CardDescription>
+            <CardTitle>{t('memoryTest.distract.title')}</CardTitle>
+            <CardDescription>{t('memoryTest.distract.remaining', { minutes: mm, seconds: ss })}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="relative aspect-video rounded-lg overflow-hidden bg-black">
@@ -359,7 +340,7 @@ export const MemoryTest = ({ onComplete, age, devMode = false }: MemoryTestProps
             {showDevControls && (
               <div className="mt-4 flex justify-center">
                 <Button variant="outline" onClick={skipDistractorNow}>
-                  Пропустить отвлекающий этап (для тестирования)
+                  {t('memoryTest.distract.skip')}
                 </Button>
               </div>
             )}
@@ -374,14 +355,13 @@ export const MemoryTest = ({ onComplete, age, devMode = false }: MemoryTestProps
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-primary/5 to-accent/5 p-4">
         <div className="w-full max-w-6xl mb-4">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-sm">Заполнено: {slots.filter(s => s != null).length}/{sequenceLength}</span>
+            <span className="text-sm">{t('memoryTest.reconstruct.filled', { filled: slots.filter(s => s != null).length, total: sequenceLength })}</span>
           </div>
         </div>
-
         <Card className="w-full max-w-6xl">
           <CardHeader className="text-center">
-            <CardTitle>Восстановите порядок</CardTitle>
-            <CardDescription>Перетащите карточки снизу в ячейки сверху</CardDescription>
+            <CardTitle>{t('memoryTest.reconstruct.title')}</CardTitle>
+            <CardDescription>{t('memoryTest.reconstruct.description')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-flow-col auto-cols-fr gap-2 mb-6">
@@ -393,10 +373,7 @@ export const MemoryTest = ({ onComplete, age, devMode = false }: MemoryTestProps
                   className={`aspect-square rounded-lg border-2 flex items-center justify-center ${src ? 'border-transparent' : 'border-dashed border-muted-foreground/40'} overflow-hidden`}
                 >
                   {src ? (
-                    <div
-                      className="w-full h-full cursor-pointer"
-                      onClick={() => onRemoveFromSlot(idx)}
-                    >
+                    <div className="w-full h-full cursor-pointer" onClick={() => onRemoveFromSlot(idx)}>
                       <img src={src} alt="card" className="w-full h-full object-cover" />
                     </div>
                   ) : (
@@ -405,16 +382,10 @@ export const MemoryTest = ({ onComplete, age, devMode = false }: MemoryTestProps
                 </div>
               ))}
             </div>
-            <div className="flex flex-wrap justify-center gap-2">
-              {poolCards.map(src => renderCard(src))}
-            </div>
+            <div className="flex flex-wrap justify-center gap-2">{poolCards.map(src => renderCard(src))}</div>
             <div className="mt-6 text-center">
-              <Button 
-                onClick={() => { setPhase('complete'); calculateResults(); }}
-                disabled={slots.some(s => s == null)}
-                variant={slots.every(s => s != null) ? 'default' : 'outline'}
-              >
-                Завершить тест
+              <Button onClick={() => { setPhase('complete'); calculateResults(); }} disabled={slots.some(s => s == null)} variant={slots.every(s => s != null) ? 'default' : 'outline'}>
+                {t('memoryTest.reconstruct.finish')}
               </Button>
             </div>
           </CardContent>
@@ -427,14 +398,12 @@ export const MemoryTest = ({ onComplete, age, devMode = false }: MemoryTestProps
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-accent/5 p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Тест завершён!</CardTitle>
-          <CardDescription>
-            Все три теста успешно пройдены
-          </CardDescription>
+          <CardTitle>{t('memoryTest.complete.title')}</CardTitle>
+          <CardDescription>{t('memoryTest.complete.description')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-center">
-            <p className="mb-4">Обрабатываем результаты...</p>
+            <p className="mb-4">{t('memoryTest.complete.processing')}</p>
             <div className="animate-pulse">
               <div className="h-2 bg-primary rounded w-full"></div>
             </div>
