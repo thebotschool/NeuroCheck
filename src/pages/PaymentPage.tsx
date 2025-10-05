@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'; // Предполагаю, что используешь shadcn/ui
 
 export const PaymentPage = () => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
-  const { t } = useTranslation();
+  const [paymentSystem, setPaymentSystem] = useState('yookassa'); // По умолчанию YooKassa
+  const { t, i18n } = useTranslation();
 
   const handlePay = async () => {
     setLoading(true);
@@ -12,10 +14,12 @@ export const PaymentPage = () => {
       const clientId = crypto.randomUUID();
       localStorage.setItem('payment_client_id', clientId);
 
-      const response = await fetch('/api/create-payment', {
+      const endpoint = paymentSystem === 'epoint' ? '/api/create-epoint-payment' : '/api/create-payment';
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, clientId }),
+        body: JSON.stringify({ email, clientId, lang: i18n.language }), // Добавляем lang
       });
 
       const contentType = response.headers.get('content-type');
@@ -55,6 +59,18 @@ export const PaymentPage = () => {
           placeholder={t('paymentPage.email.placeholder')}
           className="w-full p-2 border border-gray-300 rounded"
         />
+        <div className="space-y-2">
+          <label>{t('paymentPage.selectSystem')}</label>
+          <Select value={paymentSystem} onValueChange={setPaymentSystem}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select payment system" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="yookassa">YooKassa (RUB)</SelectItem>
+              <SelectItem value="epoint">ePoint (AZN)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         <button
           onClick={handlePay}
           className="w-full bg-black text-white py-2 rounded"

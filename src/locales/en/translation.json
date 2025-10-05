@@ -249,6 +249,7 @@
   "paymentPage.error.server": "Error Creating Payment",
   "paymentPage.error.noLink": "Failed to Get Payment Link",
   "paymentPage.error.request": "Error Creating Payment",
+  "paymentPage.selectSystem": "Select Payment System",
   "privacyPolicy.title": "Personal Data Processing Policy",
   "privacyPolicy.section1.text": "- The screening complies with FGOS requirements for assessing universal learning actions (ULA), in particular:",
   "privacyPolicy.section1.item1": "Regulatory ULA (self-control, planning, goal-setting).",

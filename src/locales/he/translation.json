@@ -250,6 +250,7 @@
   "paymentPage.error.noLink": "לא ניתן לקבל קישור לתשלום",
   "paymentPage.error.request": "שגיאה ביצירת תשלום",
   "privacyPolicy.title": "מדיניות עיבוד נתונים אישיים",
+  "paymentPage.selectSystem": "בחר מערכת תשלום",
   "privacyPolicy.section1.text": "- הסקר תואם לדרישות FGOS להערכת פעולות למידה אוניברסליות (ULA), בפרט:",
   "privacyPolicy.section1.item1": "ULA רגולטוריות (שליטה עצמית, תכנון, קביעת מטרות).",
   "privacyPolicy.section1.item2": "ULA קוגניטיביות (זיכרון עבודה, קשב, חשיבה אסטרטגית).",

@@ -249,6 +249,7 @@
   "paymentPage.error.server": "Ошибка при создании платежа",
   "paymentPage.error.noLink": "Не удалось получить ссылку на оплату",
   "paymentPage.error.request": "Ошибка при создании оплаты",
+  "paymentPage.selectSystem": "Выберите платёжную систему",
   "privacyPolicy.title": "Политика обработки персональных данных",
   "privacyPolicy.section1.text": "- Скрининг соответствует требованиям ФГОС к оценке универсальных учебных действий (УУД), в частности:",
   "privacyPolicy.section1.item1": "Регулятивных УУД (самоконтроль, планирование, целеполагание).",
