@@ -1,5 +1,5 @@
 // api/consume-token.mjs (NODEJS + REST)
-export const handler = async (req, res) => {
+module.exports.handler = async (req, res) => {
   try {
     if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
 

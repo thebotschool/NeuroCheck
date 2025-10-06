@@ -1,8 +1,8 @@
-import { Buffer } from 'buffer';
-import { getAdminClient } from './_lib/supabaseServer.mjs';
-import { Resend } from 'resend';
-import { randomUUID } from 'crypto';
-import crypto from 'crypto';
+const { Buffer } = require('buffer');
+const { getAdminClient } = require('./_lib/supabaseServer.js');
+const { Resend } = require('resend');
+const { randomUUID } = require('crypto');
+const crypto = require('crypto');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -74,7 +74,7 @@ async function sendAccessEmail(email, accessUrl, lang = 'ru') {
   }
 }
 
-export const handler = async (req, res) => {
+module.exports.handler = async (req, res) => {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return res.status(405).end('Method Not Allowed');

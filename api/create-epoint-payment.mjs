@@ -1,8 +1,8 @@
-import { randomUUID } from 'crypto';
-import crypto from 'crypto';
-import { getAdminClient } from './_lib/supabaseServer.mjs';
+const { randomUUID } = require('crypto');
+const crypto = require('crypto');
+const { getAdminClient } = require('./_lib/supabaseServer.js');
 
-export const handler = async (req, res) => {
+module.exports.handler = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).end('Method Not Allowed');
 
   const { email, clientId, lang } = req.body;

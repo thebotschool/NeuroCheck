@@ -1,26 +1,26 @@
-import express from 'express';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import dotenv from 'dotenv';
-import rawBody from 'raw-body'; // Добавлено для вебхуков
+const express = require('express');
+const path = require('path');
+const { fileURLToPath } = require('url');
+const dotenv = require('dotenv');
+const rawBody = require('raw-body');
 
 // Импорт хендлеров из api
-import { handler as consumePromoHandler } from './api/consume-promo.mjs';
-import { handler as consumeTokenHandler } from './api/consume-token.mjs';
-import { handler as createEpointPaymentHandler } from './api/create-epoint-payment.mjs';
-import { handler as createPaymentHandler } from './api/create-payment.mjs';
-import { handler as createPromoHandler } from './api/create-promo.mjs';
-import { handler as epointWebhookHandler } from './api/epoint-webhook.mjs';
-import { handler as getTokenByClientIdHandler } from './api/get-token-by-client-id.mjs';
-import { handler as resetDevTokenHandler } from './api/reset-dev-token.mjs';
-import { handler as sendDetailedReportHandler } from './api/send-detailed-report.mjs';
-import { handler as sendPaymentConfirmationHandler } from './api/send-payment-confirmation.mjs';
-import { handler as sendTestResultsHandler } from './api/send-test-results.mjs';
-import { handler as verifyTokenHandler } from './api/verify-token.mjs';
-import { handler as yookassaWebhookHandler } from './api/yookassa-webhook.mjs';
+const consumePromoHandler = require('./api/consume-promo.js').handler;
+const consumeTokenHandler = require('./api/consume-token.js').handler;
+const createEpointPaymentHandler = require('./api/create-epoint-payment.js').handler;
+const createPaymentHandler = require('./api/create-payment.js').handler;
+const createPromoHandler = require('./api/create-promo.js').handler;
+const epointWebhookHandler = require('./api/epoint-webhook.js').handler;
+const getTokenByClientIdHandler = require('./api/get-token-by-client-id.js').handler;
+const resetDevTokenHandler = require('./api/reset-dev-token.js').handler;
+const sendDetailedReportHandler = require('./api/send-detailed-report.js').handler;
+const sendPaymentConfirmationHandler = require('./api/send-payment-confirmation.js').handler;
+const sendTestResultsHandler = require('./api/send-test-results.js').handler;
+const verifyTokenHandler = require('./api/verify-token.js').handler;
+const yookassaWebhookHandler = require('./api/yookassa-webhook.js').handler;
 
 // Импорт утилит из _lib
-import { getAdminClient } from './api/_lib/supabaseServer.mjs';
+const { getAdminClient } = require('./api/_lib/supabaseServer.js');
 
 dotenv.config();
 

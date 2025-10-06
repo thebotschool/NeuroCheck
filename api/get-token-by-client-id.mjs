@@ -1,7 +1,7 @@
 // api/get-token-by-client-id.mjs
-import { getAdminClient } from './_lib/supabaseServer.mjs';
+const { getAdminClient } = require('./_lib/supabaseServer.js');
 
-export const handler = async (req, res) => {
+module.exports.handler = async (req, res) => {
   try {
     const { clientId } = req.query;
 

@@ -1,6 +1,6 @@
-import { randomUUID } from 'crypto';
+const { randomUUID } = require('crypto');
 
-export const handler = async (req, res) => {
+module.exports.handler = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).end('Method Not Allowed');
 
   const { email, clientId } = req.body;

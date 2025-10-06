@@ -1,5 +1,5 @@
-import { Resend } from 'resend';
-import { marked } from 'marked';
+const { Resend } = require('resend');
+const { marked } = require('marked');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -60,7 +60,7 @@ const metricsToHtml = (metrics, t) => {
   return table;
 };
 
-export const handler = async (req, res) => {
+module.exports.handler = async (req, res) => {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
