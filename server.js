@@ -2,6 +2,7 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+import rawBody from 'raw-body'; // Добавлено для вебхуков
 
 // Импорт хендлеров из api
 import { handler as consumePromoHandler } from './api/consume-promo.mjs';
@@ -28,27 +29,47 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
+// Middleware для обработки raw body (для вебхуков)
+app.use((req, res, next) => {
+  rawBody(req, {
+    limit: '1mb',
+    encoding: 'utf8'
+  }).then(rawBody => {
+    req.rawBody = rawBody;
+    next();
+  }).catch(next);
+});
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Маршруты
 app.post('/api/consume-promo', consumePromoHandler);
 app.post('/api/consume-token', consumeTokenHandler);
 app.post('/api/create-epoint-payment', createEpointPaymentHandler);
 app.post('/api/create-payment', createPaymentHandler);
 app.post('/api/create-promo', createPromoHandler);
 app.post('/api/epoint-webhook', epointWebhookHandler);
-app.post('/api/get-token-by-client-id', getTokenByClientIdHandler);
+app.get('/api/get-token-by-client-id', getTokenByClientIdHandler); // Добавлен GET
+app.post('/api/get-token-by-client-id', getTokenByClientIdHandler); // Оставлен POST
 app.post('/api/reset-dev-token', resetDevTokenHandler);
 app.post('/api/send-detailed-report', sendDetailedReportHandler);
 app.post('/api/send-payment-confirmation', sendPaymentConfirmationHandler);
 app.post('/api/send-test-results', sendTestResultsHandler);
-app.post('/api/verify-token', verifyTokenHandler);
+app.get('/api/verify-token', verifyTokenHandler); // Добавлен GET
+app.post('/api/verify-token', verifyTokenHandler); // Оставлен POST
 app.post('/api/yookassa-webhook', yookassaWebhookHandler);
 
 app.use(express.static(path.join(__dirname, 'dist')));
 
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
+
+// Глобальный обработчик ошибок
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ ok: false, error: 'Internal server error' });
 });
 
 const port = process.env.PORT || 3000;
