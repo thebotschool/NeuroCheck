@@ -105,7 +105,7 @@ export const handler = async (req, res) => {
     const htmlBody = html(resultsToHtml(results));
 
     await resend.emails.send({
-      from: 'NeuroCheck <results@neurocheck.ru>',
+      from: `NeuroCheck <${process.env.SITE_URL}>`,
       // from: 'NeuroCheck <onboarding@resend.dev>',
       to: [email],
       // to: 'delivered@resend.dev',

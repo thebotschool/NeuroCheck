@@ -59,7 +59,7 @@ export const handler = async (req, res) => {
     const { subject, html } = emailTemplates[chosenLang];
 
     await resend.emails.send({
-      from: 'NeuroCheck <noreply@neurocheck.ru>',
+      from: `NeuroCheck <${process.env.MAIL_FROM}>`,
       // from: 'NeuroCheck <onboarding@resend.dev>',
       to: [email],
       // to: 'delivered@resend.dev',

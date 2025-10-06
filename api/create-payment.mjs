@@ -20,7 +20,7 @@ export const handler = async (req, res) => {
     capture: true,
     confirmation: {
       type: 'redirect',
-      return_url: 'https://www.neurocheck.ru/success',
+      return_url: `${process.env.SITE_URL}/success`,
     },
     description: 'цифровой чекап учебных функций',
     metadata: { email, clientId },

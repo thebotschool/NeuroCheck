@@ -89,7 +89,7 @@ export const handler = async (req, res) => {
     `;
 
     await resend.emails.send({
-      from: 'NeuroCheck <noreply@neurocheck.ru>',
+      from: `NeuroCheck <${process.env.MAIL_FROM}>`,
       // from: 'NeuroCheck <onboarding@resend.dev>',
       to: [userEmail], // Исправлено с email на userEmail
       // to: 'delivered@resend.dev',

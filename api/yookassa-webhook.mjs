@@ -54,7 +54,7 @@ async function sendAccessEmail(email, accessUrl, lang = 'ru') {
 
   try {
     const { data, error } = await resend.emails.send({
-      from: 'NeuroCheck <noreply@neurocheck.ru>',
+      from: `NeuroCheck <${process.env.MAIL_FROM}>`,
       // from: 'NeuroCheck <onboarding@resend.dev>',
       to: [email],
       // to: 'delivered@resend.dev',
