@@ -1,5 +1,3 @@
-export const config = { runtime: "nodejs" };
-
 import { Resend } from 'resend';
 import { marked } from 'marked';
 
@@ -62,7 +60,7 @@ const metricsToHtml = (metrics, t) => {
   return table;
 };
 
-export default async function handler(req, res) {
+export const handler = async (req, res) => {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
@@ -93,7 +91,7 @@ export default async function handler(req, res) {
     await resend.emails.send({
       from: 'NeuroCheck <noreply@neurocheck.ru>',
       // from: 'NeuroCheck <onboarding@resend.dev>',
-      to: [email],
+      to: [userEmail], // Исправлено с email на userEmail
       // to: 'delivered@resend.dev',
       subject: t.subject(userEmail),
       html: htmlBody,
@@ -105,4 +103,4 @@ export default async function handler(req, res) {
     const message = e instanceof Error ? e.message : 'Unknown error';
     return res.status(500).json({ ok: false, error: message });
   }
-}
+};

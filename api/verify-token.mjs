@@ -1,12 +1,10 @@
-export const config = { runtime: "nodejs" };
-
 // api/verify-token.mjs
 // NODEJS + Supabase REST. Проверяет токен и возвращает понятный JSON.
 // GET /api/verify-token?token=...   (можно и POST с { token, email })
 
 import { getAdminClient } from './_lib/supabaseServer.mjs';
 
-export default async function handler(req, res) {
+export const handler = async (req, res) => {
   try {
     let token = '';
     let email = '';
@@ -51,7 +49,7 @@ export default async function handler(req, res) {
 
     // If email is provided via POST, update the record
     if (req.method === 'POST' && email) {
-       if (!email) return res.status(400).json({ ok: false, error: 'email_required' });
+      if (!email) return res.status(400).json({ ok: false, error: 'email_required' });
       const { error: updateError } = await supabase
         .from('tests')
         .update({ email })
@@ -71,4 +69,4 @@ export default async function handler(req, res) {
     const msg = e instanceof Error ? e.message : 'unknown';
     return res.status(500).json({ ok: false, error: `verify-token failed: ${msg}` });
   }
-}
+};

@@ -1,5 +1,3 @@
-export const config = { runtime: "nodejs" };
-
 import { Buffer } from 'buffer';
 import { getAdminClient } from './_lib/supabaseServer.mjs';
 import { Resend } from 'resend';
@@ -45,21 +43,6 @@ const translations = {
   }
 };
 
-const readRawBody = (req) => {
-  return new Promise((resolve, reject) => {
-    let body = '';
-    req.on('data', (chunk) => {
-      body += chunk.toString();
-    });
-    req.on('end', () => {
-      resolve(body);
-    });
-    req.on('error', (err) => {
-      reject(err);
-    });
-  });
-};
-
 // Теперь sendAccessEmail принимает язык
 async function sendAccessEmail(email, accessUrl, lang = 'ru') {
   if (!email) {
@@ -96,7 +79,7 @@ async function sendAccessEmail(email, accessUrl, lang = 'ru') {
   }
 }
 
-export default async (req, res) => {
+export const handler = async (req, res) => {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return res.status(405).end('Method Not Allowed');
@@ -105,7 +88,7 @@ export default async (req, res) => {
   console.log('📩 Yookassa webhook received');
 
   try {
-    const rawBody = await readRawBody(req);
+    const rawBody = req.rawBody.toString();
     console.log('Raw body:', rawBody);
 
     const payload = JSON.parse(rawBody);

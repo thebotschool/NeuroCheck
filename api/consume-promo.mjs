@@ -1,8 +1,6 @@
-export const config = { runtime: "nodejs" };
-
 import { getAdminClient } from './_lib/supabaseServer.mjs';
 
-export default async function handler(req, res) {
+export const handler = async (req, res) => {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
@@ -33,10 +31,9 @@ export default async function handler(req, res) {
     }
 
     return res.status(200).json({ ok: true, token: result.new_test_token });
-
   } catch (e) {
     console.error('Error in consume-promo handler:', e);
     const message = e instanceof Error ? e.message : 'Unknown error';
     return res.status(500).json({ ok: false, error: message });
   }
-}
+};

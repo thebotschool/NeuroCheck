@@ -1,9 +1,7 @@
-export const config = { runtime: "nodejs" };
-
 // api/get-token-by-client-id.mjs
 import { getAdminClient } from './_lib/supabaseServer.mjs';
 
-export default async function handler(req, res) {
+export const handler = async (req, res) => {
   try {
     const { clientId } = req.query;
 
@@ -36,4 +34,4 @@ export default async function handler(req, res) {
     const msg = e instanceof Error ? e.message : 'unknown';
     return res.status(500).json({ error: `get-token-by-client-id failed: ${msg}` });
   }
-}
+};

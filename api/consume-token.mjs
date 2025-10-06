@@ -1,7 +1,5 @@
-export const config = { runtime: "nodejs" };
-
-// api/consume-token.mjs  (NODEJS + REST)
-export default async function handler(req, res) {
+// api/consume-token.mjs (NODEJS + REST)
+export const handler = async (req, res) => {
   try {
     if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
 
@@ -65,4 +63,4 @@ export default async function handler(req, res) {
     const msg = e instanceof Error ? e.message : 'unknown';
     return res.status(500).json({ ok: false, error: `consume-token(nodejs) failed: ${msg}` });
   }
-}
+};

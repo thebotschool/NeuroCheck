@@ -1,8 +1,6 @@
-export const config = { runtime: "nodejs" };
-
 import { randomUUID } from 'crypto';
 
-export default async function handler(req, res) {
+export const handler = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).end('Method Not Allowed');
 
   const { email, clientId } = req.body;
@@ -68,4 +66,4 @@ export default async function handler(req, res) {
     console.error(error);
     return res.status(500).json({ error: 'Internal Server Error' });
   }
-}
+};

@@ -1,5 +1,3 @@
-export const config = { runtime: "nodejs" };
-
 import { Buffer } from 'buffer';
 import { getAdminClient } from './_lib/supabaseServer.mjs';
 import { Resend } from 'resend';
@@ -35,27 +33,12 @@ const translations = {
   },
   he: {
     subject: 'קישור למבחן NeuroCheck',
-    hello: 'שлום!',
-    paid: 'התשלום עבור מבчן NeuroCheck בוצע בהצלחה.',
+    hello: 'שלום!',
+    paid: 'התשלום עבור מבחן NeuroCheck בוצע בהצלחה.',
     start: (url) =>
       `כדי להתחיל את המבחן אנא לחצו <a href="${url}">כאן</a>.`,
     regards: 'בברכה,<br>צוות NeuroCheck'
   }
-};
-
-const readRawBody = (req) => {
-  return new Promise((resolve, reject) => {
-    let body = '';
-    req.on('data', (chunk) => {
-      body += chunk.toString();
-    });
-    req.on('end', () => {
-      resolve(body);
-    });
-    req.on('error', (err) => {
-      reject(err);
-    });
-  });
 };
 
 async function sendAccessEmail(email, accessUrl, lang = 'ru') {
@@ -91,7 +74,7 @@ async function sendAccessEmail(email, accessUrl, lang = 'ru') {
   }
 }
 
-export default async (req, res) => {
+export const handler = async (req, res) => {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return res.status(405).end('Method Not Allowed');
@@ -100,7 +83,8 @@ export default async (req, res) => {
   console.log('📩 ePoint webhook received');
 
   try {
-    const rawBody = await readRawBody(req);
+    // Используем req.rawBody, установленное middleware в server.js
+    const rawBody = req.rawBody.toString();
     const params = new URLSearchParams(rawBody);
     const receivedData = params.get('data');
     const receivedSignature = params.get('signature');

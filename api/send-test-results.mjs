@@ -1,5 +1,3 @@
-export const config = { runtime: "nodejs" };
-
 import { Resend } from 'resend';
 import { marked } from 'marked';
 
@@ -89,7 +87,7 @@ const emailTemplates = {
   },
 };
 
-export default async function handler(req, res) {
+export const handler = async (req, res) => {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
@@ -121,4 +119,4 @@ export default async function handler(req, res) {
     const message = e instanceof Error ? e.message : 'Unknown error';
     return res.status(500).json({ ok: false, error: message });
   }
-}
+};
