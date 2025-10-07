@@ -1,6 +1,6 @@
 const { Resend } = require('resend');
-const { marked } = require('marked');
 
+// Инициализация Resend
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Словарь для переводов
@@ -72,7 +72,10 @@ module.exports.handler = async (req, res) => {
       return res.status(400).json({ error: 'userEmail, detailedReport, and metrics are required' });
     }
 
-    // выбираем язык (по умолчанию русский)
+    // Динамический импорт marked внутри хендлера
+    const { marked } = await import('marked');
+
+    // Выбираем язык (по умолчанию русский)
     const t = translations[lang] || translations.ru;
 
     const htmlBody = `
@@ -90,9 +93,7 @@ module.exports.handler = async (req, res) => {
 
     await resend.emails.send({
       from: `NeuroCheck <${process.env.MAIL_FROM}>`,
-      // from: 'NeuroCheck <onboarding@resend.dev>',
-      to: [userEmail], // Исправлено с email на userEmail
-      // to: 'delivered@resend.dev',
+      to: [userEmail],
       subject: t.subject(userEmail),
       html: htmlBody,
     });

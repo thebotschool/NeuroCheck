@@ -1,31 +1,27 @@
 const express = require('express');
 const path = require('path');
-const { fileURLToPath } = require('url');
 const dotenv = require('dotenv');
 const rawBody = require('raw-body');
 
 // Импорт хендлеров из api
-const consumePromoHandler = require('./api/consume-promo.js').handler;
-const consumeTokenHandler = require('./api/consume-token.js').handler;
-const createEpointPaymentHandler = require('./api/create-epoint-payment.js').handler;
-const createPaymentHandler = require('./api/create-payment.js').handler;
-const createPromoHandler = require('./api/create-promo.js').handler;
-const epointWebhookHandler = require('./api/epoint-webhook.js').handler;
-const getTokenByClientIdHandler = require('./api/get-token-by-client-id.js').handler;
-const resetDevTokenHandler = require('./api/reset-dev-token.js').handler;
-const sendDetailedReportHandler = require('./api/send-detailed-report.js').handler;
-const sendPaymentConfirmationHandler = require('./api/send-payment-confirmation.js').handler;
-const sendTestResultsHandler = require('./api/send-test-results.js').handler;
-const verifyTokenHandler = require('./api/verify-token.js').handler;
-const yookassaWebhookHandler = require('./api/yookassa-webhook.js').handler;
+const { handler: consumePromoHandler } = require('./api/consume-promo.js');
+const { handler: consumeTokenHandler } = require('./api/consume-token.js');
+const { handler: createEpointPaymentHandler } = require('./api/create-epoint-payment.js');
+const { handler: createPaymentHandler } = require('./api/create-payment.js');
+const { handler: createPromoHandler } = require('./api/create-promo.js');
+const { handler: epointWebhookHandler } = require('./api/epoint-webhook.js');
+const { handler: getTokenByClientIdHandler } = require('./api/get-token-by-client-id.js');
+const { handler: resetDevTokenHandler } = require('./api/reset-dev-token.js');
+const { handler: sendDetailedReportHandler } = require('./api/send-detailed-report.js');
+const { handler: sendPaymentConfirmationHandler } = require('./api/send-payment-confirmation.js');
+const { handler: sendTestResultsHandler } = require('./api/send-test-results.js');
+const { handler: verifyTokenHandler } = require('./api/verify-token.js');
+const { handler: yookassaWebhookHandler } = require('./api/yookassa-webhook.js');
 
 // Импорт утилит из _lib
 const { getAdminClient } = require('./api/_lib/supabaseServer.js');
 
 dotenv.config();
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -51,18 +47,17 @@ app.post('/api/create-payment', createPaymentHandler);
 app.post('/api/create-promo', createPromoHandler);
 app.post('/api/epoint-webhook', epointWebhookHandler);
 app.get('/api/get-token-by-client-id', getTokenByClientIdHandler); // Добавлен GET
-app.post('/api/get-token-by-client-id', getTokenByClientIdHandler); // Оставлен POST
 app.post('/api/reset-dev-token', resetDevTokenHandler);
 app.post('/api/send-detailed-report', sendDetailedReportHandler);
 app.post('/api/send-payment-confirmation', sendPaymentConfirmationHandler);
 app.post('/api/send-test-results', sendTestResultsHandler);
 app.get('/api/verify-token', verifyTokenHandler); // Добавлен GET
-app.post('/api/verify-token', verifyTokenHandler); // Оставлен POST
 app.post('/api/yookassa-webhook', yookassaWebhookHandler);
 
 app.use(express.static(path.join(__dirname, 'dist')));
 
-app.get('*', (req, res) => {
+// Изменяем на регулярное выражение для wildcard
+app.get(/.*/, (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 

@@ -1,5 +1,4 @@
 const { Resend } = require('resend');
-const { marked } = require('marked');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -9,11 +8,10 @@ const resultsToHtml = (results) => {
 
   for (const [key, value] of Object.entries(results)) {
     if (key === 'report' && typeof value === 'string') {
-      // Markdown → HTML
-      const htmlReport = marked.parse(value);
+      // Placeholder для marked, будет обработан внутри хендлера
       table += `<tr>
         <td style="border: 1px solid #ddd; padding: 8px;">${key}</td>
-        <td style="border: 1px solid #ddd; padding: 8px;">${htmlReport}</td>
+        <td style="border: 1px solid #ddd; padding: 8px;">${value}</td>
       </tr>`;
     } else {
       table += `<tr>
@@ -26,8 +24,7 @@ const resultsToHtml = (results) => {
   return table;
 };
 
-
-// шаблоны писем
+// Шаблоны писем
 const emailTemplates = {
   ru: {
     subject: 'Результаты вашего тестирования NeuroCheck',
@@ -99,16 +96,40 @@ module.exports.handler = async (req, res) => {
       return res.status(400).json({ error: 'Email and results are required' });
     }
 
+    // Динамический импорт marked внутри хендлера
+    const { marked } = await import('marked');
+
+    // Переопределяем resultsToHtml с использованием marked
+    const resultsToHtmlWithMarked = (results) => {
+      let table = '<table style="width: 100%; border-collapse: collapse;">';
+      table += '<tr><th style="border: 1px solid #ddd; padding: 8px; background-color: #f2f2f2; text-align: left;">Result</th><th style="border: 1px solid #ddd; padding: 8px; background-color: #f2f2f2; text-align: left;">Value</th></tr>';
+
+      for (const [key, value] of Object.entries(results)) {
+        if (key === 'report' && typeof value === 'string') {
+          const htmlReport = marked.parse(value);
+          table += `<tr>
+            <td style="border: 1px solid #ddd; padding: 8px;">${key}</td>
+            <td style="border: 1px solid #ddd; padding: 8px;">${htmlReport}</td>
+          </tr>`;
+        } else {
+          table += `<tr>
+            <td style="border: 1px solid #ddd; padding: 8px;">${key}</td>
+            <td style="border: 1px solid #ddd; padding: 8px;">${JSON.stringify(value, null, 2)}</td>
+          </tr>`;
+        }
+      }
+      table += '</table>';
+      return table;
+    };
+
     const chosenLang = emailTemplates[lang] ? lang : 'ru';
     const { subject, html } = emailTemplates[chosenLang];
 
-    const htmlBody = html(resultsToHtml(results));
+    const htmlBody = html(resultsToHtmlWithMarked(results));
 
     await resend.emails.send({
       from: `NeuroCheck <${process.env.SITE_URL}>`,
-      // from: 'NeuroCheck <onboarding@resend.dev>',
       to: [email],
-      // to: 'delivered@resend.dev',
       subject: subject,
       html: htmlBody,
     });
